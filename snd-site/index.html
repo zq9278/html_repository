@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SND100 UI Prototype</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#07080a;
+  --surface:#111318;
+  --surface-2:#171a21;
+  --surface-3:#20242d;
+  --line:#2a303b;
+  --text:#f6f3ed;
+  --muted:#9da4ae;
+  --accent:#e5484d;
+  --accent-2:#ff9a76;
+  --danger:#ff6070;
+  --warn:#ffb24a;
+  --ok:#77d89b;
+  --body-bg:#111216;
+  --scale:1.2;
+}
+body{
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:var(--body-bg);
+  color:var(--text);
+  font-family:"Microsoft YaHei","Segoe UI",sans-serif;
+}
+button,input,select{font:inherit}
+button{border:0;color:inherit;cursor:pointer}
+.device{
+  width:1024px;
+  height:600px;
+  overflow:hidden;
+  position:relative;
+  border-radius:22px;
+  border:1px solid #282d36;
+  background:
+    radial-gradient(circle at 18% -6%,color-mix(in srgb,var(--accent) 15%,transparent),transparent 32%),
+    linear-gradient(180deg,#101216,#08090c 72%);
+  box-shadow:0 26px 70px rgba(0,0,0,.5);
+  font-size:calc(14px * var(--scale));
+}
+body.light{
+  --bg:#f4f2ec;
+  --surface:#ffffff;
+  --surface-2:#f4f1ea;
+  --surface-3:#ece7dd;
+  --line:#d9d2c6;
+  --text:#151515;
+  --muted:#6f747a;
+  --body-bg:#e8e3da;
+}
+body.light .device{
+  background:
+    radial-gradient(circle at 20% -6%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 34%),
+    linear-gradient(180deg,#fbfaf7,#efebe2 72%);
+}
+body.font-1{--scale:1.4}
+body.font-2{--scale:1.6}
+body.font-3{--scale:1.8}
+.topbar{
+  height:54px;
+  padding:0 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid color-mix(in srgb,var(--line) 78%,transparent);
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:#08090b;
+  font-weight:900;
+  background:linear-gradient(145deg,var(--accent-2),var(--accent));
+}
+.brand-title{font-size:calc(15px * var(--scale));font-weight:900;line-height:1}
+.brand-sub{display:none;font-size:calc(9px * var(--scale));color:var(--muted);margin-top:2px;white-space:nowrap}
+.statusbar{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:calc(8px * var(--scale));min-width:0}
+.online,.wifi-status{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+.wifi-icon{width:22px;height:17px;position:relative;display:inline-block}
+.wifi-icon:before,.wifi-icon:after{content:"";position:absolute;left:50%;transform:translateX(-50%);border:2px solid var(--accent);border-bottom:0;border-left-color:transparent;border-right-color:transparent;border-radius:18px 18px 0 0}
+.wifi-icon:before{top:1px;width:20px;height:12px}
+.wifi-icon:after{top:6px;width:13px;height:8px}
+.wifi-icon span{position:absolute;left:50%;bottom:1px;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.wifi-status.disconnected .wifi-icon:before,
+.wifi-status.disconnected .wifi-icon:after,
+.wifi-status.disconnected .wifi-icon span{border-color:transparent;background:transparent}
+.battery{width:34px;height:15px;padding:2px;border:1px solid #8f969f;border-radius:4px;position:relative}
+.battery:after{content:"";position:absolute;right:-4px;top:4px;width:3px;height:6px;border-radius:0 2px 2px 0;background:#8f969f}
+.battery div{height:100%;width:78%;border-radius:2px;background:var(--accent)}
+.lang-toggle{
+  display:flex;
+  gap:3px;
+  padding:3px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:color-mix(in srgb,var(--surface) 88%,transparent);
+}
+.lang-toggle button{height:24px;min-width:36px;border-radius:12px;background:transparent;color:var(--muted);font-size:11px}
+.lang-toggle button.active{background:var(--text);color:var(--bg);font-weight:900}
+.content{height:488px;padding:14px 16px}
+.page{display:none;height:100%;min-height:0}
+.page.active{display:block}
+.btn{
+  min-height:34px;
+  padding:0 13px;
+  border-radius:17px;
+  background:var(--surface-3);
+  color:var(--text);
+  font-size:calc(11px * var(--scale));
+  white-space:nowrap;
+}
+.btn.primary{background:linear-gradient(145deg,var(--accent-2),var(--accent));color:#090a0c;font-weight:900}
+.btn.ghost{background:color-mix(in srgb,var(--surface) 85%,transparent);border:1px solid var(--line)}
+.btn.warn{background:rgba(255,178,74,.14);border:1px solid rgba(255,178,74,.26);color:#ffd399}
+.btn.danger{background:rgba(255,96,112,.14);border:1px solid rgba(255,96,112,.26);color:#ffc6cd}
+.btn:active{transform:scale(.98)}
+.card{
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01)),var(--surface);
+}
+.home{
+  height:460px;
+  display:grid;
+  grid-template-columns:590px 1fr;
+  gap:14px;
+  overflow:hidden;
+}
+.stim-visual{
+  position:relative;
+  overflow:hidden;
+  min-height:0;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:
+    radial-gradient(circle at 52% 42%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 35%),
+    linear-gradient(145deg,#0d0f13,#151820);
+}
+body.light .stim-visual{
+  background:
+    radial-gradient(circle at 52% 42%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 35%),
+    linear-gradient(145deg,#fff,#f1ede5);
+}
+.stim-visual:before{
+  content:"";
+  position:absolute;
+  inset:18px;
+  border-radius:14px;
+  border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);
+}
+.body-line{
+  position:absolute;
+  left:48px;
+  top:58px;
+  width:500px;
+  height:300px;
+}
+.body-line svg{width:100%;height:100%;overflow:visible}
+.body-line path,.body-line circle,.body-line ellipse,.body-line line{
+  fill:none;
+  stroke:color-mix(in srgb,var(--text) 46%,transparent);
+  stroke-width:6;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.body-line .cute-fill{fill:color-mix(in srgb,var(--accent) 8%,transparent);stroke:color-mix(in srgb,var(--text) 52%,transparent)}
+.body-line .soft{stroke:color-mix(in srgb,var(--accent-2) 70%,var(--text));stroke-width:4}
+.body-line .face{stroke:color-mix(in srgb,var(--text) 72%,transparent);stroke-width:4}
+.body-line .eye{fill:color-mix(in srgb,var(--text) 82%,transparent);stroke:none}
+.body-line .cheek{fill:color-mix(in srgb,var(--accent-2) 28%,transparent);stroke:none}
+.body-line .inner{fill:color-mix(in srgb,var(--accent-2) 16%,transparent);stroke:color-mix(in srgb,var(--accent-2) 45%,transparent);stroke-width:4}
+.body-line .nose{fill:var(--accent-2);stroke:none}
+.body-line .spark{stroke:var(--accent-2);stroke-width:4}
+.pulse-ring{
+  position:absolute;
+  width:122px;
+  height:122px;
+  border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--accent) 50%,transparent);
+  animation:pulse 2.2s ease-out infinite;
+}
+.pulse-ring.r1{left:112px;top:148px}
+.pulse-ring.r2{left:342px;top:150px;animation-delay:.45s}
+.pulse-ring.r3{left:410px;top:198px;animation-delay:.9s}
+.point{
+  position:absolute;
+  width:13px;
+  height:13px;
+  border-radius:50%;
+  background:var(--accent-2);
+  box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 18%,transparent),0 0 22px var(--accent);
+}
+.point.p1{left:167px;top:204px}
+.point.p2{left:397px;top:205px}
+.point.p3{left:456px;top:236px}
+.needle{
+  position:absolute;
+  width:2px;
+  height:58px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--text) 76%,transparent),var(--accent));
+  transform-origin:top;
+  opacity:.72;
+  box-shadow:0 0 18px color-mix(in srgb,var(--accent) 42%,transparent);
+}
+.needle.n1{left:173px;top:132px;transform:rotate(12deg)}
+.needle.n2{left:403px;top:132px;transform:rotate(-10deg)}
+.needle.n3{left:462px;top:164px;transform:rotate(16deg)}
+.wave-path{
+  position:absolute;
+  left:58px;
+  right:58px;
+  bottom:52px;
+  height:86px;
+}
+.wave-path svg{width:100%;height:100%}
+.wave-path path{
+  fill:none;
+  stroke:var(--accent-2);
+  stroke-width:4;
+  stroke-linecap:round;
+  stroke-dasharray:18 18;
+  animation:flow 1.4s linear infinite;
+}
+.home-copy{
+  padding:20px;
+  display:grid;
+  grid-template-rows:auto 1fr;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.home-copy h1{
+  margin:0;
+  font-size:calc(25px * var(--scale));
+  line-height:1.06;
+  letter-spacing:0;
+}
+.home-copy p{
+  margin:10px 0 0;
+  color:var(--muted);
+  font-size:calc(10px * var(--scale));
+  line-height:1.5;
+}
+.feature-list{
+  align-self:end;
+  display:grid;
+  gap:8px;
+  min-height:0;
+}
+.feature{
+  display:grid;
+  grid-template-columns:30px 1fr;
+  gap:9px;
+  align-items:center;
+  padding:9px;
+  border-radius:10px;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+}
+.feature i{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-style:normal;
+  font-weight:900;
+  color:#090a0c;
+  background:linear-gradient(145deg,var(--accent-2),var(--accent));
+}
+.feature b{display:block;font-size:calc(12px * var(--scale))}
+.feature span{display:block;margin-top:2px;color:var(--muted);font-size:calc(9px * var(--scale));line-height:1.35}
+.section-head{height:44px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.section-head h2{margin:0;font-size:calc(18px * var(--scale));line-height:1.1}
+.section-head p{margin:3px 0 0;color:var(--muted);font-size:calc(9px * var(--scale));line-height:1.25}
+.channel-area{height:calc(100% - 44px);padding-top:10px}
+.channel-grid{height:100%;display:grid;gap:10px}
+.channel-grid.product-8{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr)}
+.channel-card{
+  min-width:0;
+  min-height:0;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),var(--surface);
+  padding:13px;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  gap:8px;
+  position:relative;
+  overflow:hidden;
+}
+.channel-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+.channel-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.channel-top>div{min-width:0}
+.channel-name{font-size:calc(13px * var(--scale));font-weight:900}
+.channel-site{font-size:calc(9px * var(--scale));color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{height:22px;padding:0 8px;border-radius:11px;background:var(--surface-3);color:var(--muted);font-size:calc(8px * var(--scale));display:flex;align-items:center;white-space:nowrap}
+.pill.running{background:color-mix(in srgb,var(--accent) 18%,var(--surface-3));color:var(--accent-2)}
+.pill.paused{background:rgba(255,178,74,.14);color:#ffd098}
+.channel-mid{display:grid;align-content:center;min-width:0;overflow:hidden}
+.channel-mid>div{min-width:0;overflow:hidden}
+.big-value{font-size:calc(34px * var(--scale));font-weight:900;line-height:1;letter-spacing:0}
+.product-8 .big-value{font-size:calc(23px * var(--scale))}
+.unit{font-size:calc(10px * var(--scale));color:var(--muted);margin-left:3px}
+.subline{margin-top:7px;color:var(--muted);font-size:calc(9px * var(--scale));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.channel-actions{display:flex;gap:7px;min-width:0;overflow:hidden}
+.channel-actions .btn{flex:1;min-width:0;min-height:30px;padding:0 8px;overflow:hidden;text-overflow:ellipsis}
+.detail{height:100%;display:grid;grid-template-columns:400px 1fr;gap:12px}
+.monitor,.form-panel{border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:14px;min-height:0}
+.monitor{display:grid;grid-template-rows:auto 1fr;gap:10px}
+.monitor h2,.form-panel h2{margin:0;font-size:calc(18px * var(--scale));line-height:1.1}
+.monitor p,.form-panel p{display:none;margin:4px 0 0;color:var(--muted);font-size:calc(9px * var(--scale))}
+.curve-panel{border-radius:10px;background:#090a0d;border:1px solid #222832;padding:10px;min-height:0}
+body.light .curve-panel{background:#f8f7f3;border-color:#dedbd4}
+.curve-panel svg{display:block;width:100%;height:210px}
+.readout{display:flex;align-items:flex-end;justify-content:space-between;margin-top:8px}
+.readout b{font-size:calc(34px * var(--scale));line-height:1;letter-spacing:0}
+.readout span{color:var(--muted);font-size:calc(13px * var(--scale));font-weight:800}
+.monitor-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form-panel{display:grid;grid-template-rows:auto 1fr auto;gap:6px;overflow:hidden}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.field{border-radius:10px;background:var(--bg);border:1px solid var(--line);padding:7px;min-width:0;overflow:hidden}
+body.light .field{background:#f7f5ef}
+.field-label{font-size:calc(9px * var(--scale));color:var(--muted);margin-bottom:7px}
+.select,.numeric{
+  width:100%;
+  height:38px;
+  border-radius:19px;
+  border:1px solid var(--line);
+  background:var(--surface-2);
+  color:var(--text);
+  padding:0 12px;
+}
+.numeric{display:flex;align-items:center;justify-content:center;font-weight:900}
+.wave-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.wave-row button{height:36px;border-radius:18px;background:var(--surface-2);color:var(--muted);font-size:calc(9px * var(--scale))}
+.wave-row button.active{background:var(--text);color:var(--bg);font-weight:900}
+.form-actions{display:flex;justify-content:flex-end;gap:8px;min-height:0}
+.records-layout{height:calc(100% - 44px);padding-top:10px;display:grid;grid-template-columns:1fr;gap:12px}
+.record-control{padding:14px;display:grid;grid-template-rows:auto 1fr auto;gap:10px}
+.record-control h3{margin:0;font-size:calc(16px * var(--scale))}
+.record-control p{margin:6px 0 0;color:var(--muted);font-size:calc(9px * var(--scale));line-height:1.35}
+.record-meter{display:grid;place-items:center;text-align:center}
+.record-meter b{font-size:calc(34px * var(--scale));line-height:1}
+.record-meter span{display:block;margin-top:6px;color:var(--muted);font-size:calc(9px * var(--scale))}
+.record-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.records{display:grid;grid-template-columns:1fr;grid-auto-rows:64px;gap:9px;min-height:0;height:100%;overflow-y:auto;padding-right:4px}
+.record{padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);min-width:0;display:grid;grid-template-columns:96px 1.4fr 1.2fr 120px;gap:12px;align-items:center;overflow:hidden}
+.record b{font-size:calc(12px * var(--scale));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.record span{display:block;margin-top:7px;color:var(--muted);font-size:calc(9px * var(--scale));line-height:1.45}
+.record-meta{display:contents}
+.record-meta div{min-width:0;color:var(--muted);font-size:calc(9px * var(--scale));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.record-meta strong{color:var(--text);font-weight:900}
+.settings-layout{height:100%;display:grid;grid-template-columns:210px 1fr;gap:12px}
+.settings-nav{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.settings-nav button{width:100%;height:42px;border-radius:8px;background:transparent;text-align:left;padding:0 12px;color:var(--muted);font-size:calc(10px * var(--scale))}
+.settings-nav button.active{background:var(--surface-3);color:var(--text);font-weight:900}
+.settings-panel{padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);overflow:hidden}
+.setting-row{height:62px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid color-mix(in srgb,var(--line) 80%,transparent);overflow:hidden}
+.setting-row:last-child{border-bottom:0}
+.setting-row>div:first-child{min-width:0;overflow:hidden}
+.setting-row b{font-size:calc(12px * var(--scale))}
+.setting-row span{display:block;margin-top:3px;color:var(--muted);font-size:calc(8px * var(--scale));line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:410px}
+.theme-options,.bg-options,.font-options{display:flex;gap:8px;align-items:center;flex-wrap:nowrap}
+.swatch{width:34px;height:34px;border-radius:50%;border:2px solid color-mix(in srgb,var(--line) 90%,#fff);background:var(--swatch)}
+.swatch.active{border-color:var(--text);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+.choice{height:34px;min-width:58px;padding:0 12px;border-radius:17px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);font-size:calc(9px * var(--scale))}
+.choice.active{background:var(--text);color:var(--bg);font-weight:900}
+.switch{width:48px;height:26px;padding:3px;border-radius:13px;background:var(--surface-3)}
+.switch span{display:block;width:20px;height:20px;border-radius:50%;background:#fff;transition:.16s}
+.switch.on{background:var(--accent)}
+.switch.on span{transform:translateX(22px)}
+.footer{height:58px;padding:0 16px;border-top:1px solid color-mix(in srgb,var(--line) 78%,transparent);display:flex;align-items:center;justify-content:space-between}
+.nav{display:flex;gap:6px}
+.nav button{height:36px;min-width:72px;border-radius:18px;background:transparent;color:var(--muted);font-size:calc(10px * var(--scale))}
+.nav button.active{background:var(--text);color:var(--bg);font-weight:900}
+.global-actions{display:flex;gap:8px}
+body:has(#page-home.active) .global-actions,
+body:has(#page-records.active) .global-actions,
+body:has(#page-settings.active) .global-actions{display:none}
+.toast{position:absolute;left:50%;bottom:70px;transform:translate(-50%,14px);opacity:0;pointer-events:none;padding:9px 14px;border-radius:18px;background:var(--text);color:var(--bg);font-size:12px;font-weight:900;transition:.16s;z-index:7}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.keypad{
+  position:absolute;
+  right:18px;
+  bottom:66px;
+  width:380px;
+  padding:14px;
+  border-radius:16px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  box-shadow:0 20px 50px rgba(0,0,0,.5);
+  display:none;
+  z-index:6;
+}
+.keypad.open{display:block}
+.keypad-display{height:56px;border-radius:28px;background:var(--surface-2);display:grid;place-items:center;font-size:26px;font-weight:900;margin-bottom:12px}
+.keypad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.keypad-grid button{height:54px;border-radius:27px;background:var(--surface-3);font-size:22px;font-weight:900}
+.keypad-grid .ok{background:var(--accent);color:#08090b}
+@keyframes pulse{0%{transform:scale(.42);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+@keyframes flow{to{stroke-dashoffset:-72}}
+</style>
+</head>
+<body class="font-1">
+<div class="device">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div><div class="brand-title">SND100</div><div class="brand-sub" data-i18n="brandSub">神经电针刺激治疗系统</div></div>
+    </div>
+    <div class="statusbar">
+      <div class="wifi-status connected" title="WiFi"><span class="wifi-icon"><span></span></span></div>
+      <div id="clock">20:00</div>
+      <div class="battery"><div></div></div>
+      <span>78%</span>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="page active" id="page-home">
+      <div class="home">
+        <div class="stim-visual">
+          <div class="body-line">
+            <svg viewBox="0 0 500 300" aria-hidden="true">
+              <ellipse cx="137" cy="208" rx="86" ry="48" class="cute-fill" />
+              <circle cx="93" cy="152" r="46" class="cute-fill" />
+              <circle cx="58" cy="116" r="21" class="cute-fill" />
+              <circle cx="121" cy="112" r="23" class="cute-fill" />
+              <circle cx="58" cy="116" r="11" class="inner" />
+              <circle cx="121" cy="112" r="12" class="inner" />
+              <circle cx="82" cy="149" r="7" class="eye" />
+              <circle cx="112" cy="147" r="7" class="eye" />
+              <circle cx="98" cy="157" r="4" class="nose" />
+              <ellipse cx="70" cy="166" rx="10" ry="6" class="cheek" />
+              <ellipse cx="124" cy="164" rx="10" ry="6" class="cheek" />
+              <path d="M94 160 C99 166 105 166 111 160" class="soft" />
+              <path d="M95 154 L89 158 L96 161" class="face" />
+              <line x1="55" y1="157" x2="24" y2="151" class="face" />
+              <line x1="55" y1="169" x2="23" y2="174" class="face" />
+              <line x1="132" y1="156" x2="164" y2="150" class="face" />
+              <line x1="132" y1="168" x2="166" y2="174" class="face" />
+              <path d="M59 221 C31 222 10 208 13 190 C18 164 54 177 69 205" />
+              <path d="M214 220 C241 228 256 247 263 274" />
+              <path d="M155 175 L171 151 L167 178 L187 168" class="spark" />
+              <ellipse cx="385" cy="213" rx="82" ry="52" class="cute-fill" />
+              <circle cx="386" cy="148" r="47" class="cute-fill" />
+              <path d="M358 111 C334 63 343 25 366 15 C393 52 390 91 371 121" class="cute-fill" />
+              <path d="M415 111 C421 62 445 28 468 23 C477 69 456 101 426 123" class="cute-fill" />
+              <path d="M360 105 C346 66 352 38 365 28 C382 61 380 90 369 112" class="inner" />
+              <path d="M421 105 C428 68 444 43 460 36 C464 72 449 96 428 114" class="inner" />
+              <circle cx="374" cy="146" r="7" class="eye" />
+              <circle cx="407" cy="146" r="7" class="eye" />
+              <circle cx="391" cy="157" r="4" class="nose" />
+              <ellipse cx="361" cy="165" rx="10" ry="6" class="cheek" />
+              <ellipse cx="421" cy="165" rx="10" ry="6" class="cheek" />
+              <path d="M385 160 C391 168 399 168 405 160" class="soft" />
+              <path d="M389 154 L383 158 L390 161" class="face" />
+              <line x1="346" y1="158" x2="315" y2="151" class="face" />
+              <line x1="346" y1="170" x2="313" y2="176" class="face" />
+              <line x1="426" y1="158" x2="459" y2="151" class="face" />
+              <line x1="426" y1="170" x2="460" y2="176" class="face" />
+              <ellipse cx="466" cy="208" rx="25" ry="17" class="cute-fill" />
+              <path d="M321 237 C300 252 287 270 281 292" />
+              <path d="M392 176 L408 150 L404 178 L426 166" class="spark" />
+            </svg>
+          </div>
+          <div class="pulse-ring r1"></div>
+          <div class="pulse-ring r2"></div>
+          <div class="pulse-ring r3"></div>
+          <div class="point p1"></div>
+          <div class="point p2"></div>
+          <div class="point p3"></div>
+          <div class="needle n1"></div>
+          <div class="needle n2"></div>
+          <div class="needle n3"></div>
+          <div class="wave-path">
+            <svg viewBox="0 0 480 86" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M0 45 C40 12 78 12 118 45 S196 78 236 45 S314 12 354 45 S432 78 480 45" />
+            </svg>
+          </div>
+        </div>
+        <div class="home-copy card">
+          <div>
+            <h1 data-i18n="homeTitle">精准、舒适、可控的电针刺激</h1>
+            <p data-i18n="homeDesc">面向多通道电刺激治疗场景，提供稳定输出、柔和渐进和清晰的安全反馈。</p>
+          </div>
+          <div class="feature-list">
+            <div class="feature"><i>01</i><div><b data-i18n="feature1Title">细腻输出</b><span data-i18n="feature1Text">电流、频率、脉宽可精细调节。</span></div></div>
+            <div class="feature"><i>02</i><div><b data-i18n="feature2Title">舒适渐进</b><span data-i18n="feature2Text">刺激逐步建立，降低突兀感。</span></div></div>
+            <div class="feature"><i>03</i><div><b data-i18n="feature3Title">安全守护</b><span data-i18n="feature3Text">关注连接和输出状态，异常及时提醒。</span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-channels">
+      <div class="section-head">
+        <div><h2 id="overviewTitle"></h2><p id="overviewSub"></p></div>
+      </div>
+      <div class="channel-area"><div class="channel-grid product-8" id="channelGrid"></div></div>
+    </section>
+
+    <section class="page" id="page-detail">
+      <div class="detail">
+        <div class="monitor">
+          <div><h2 id="detailTitle"></h2><p id="detailSub"></p></div>
+          <div class="curve-panel">
+            <svg viewBox="0 0 360 210" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--accent)" stop-opacity=".32"/>
+                  <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <g stroke="#2b313a" stroke-width="1">
+                <line x1="0" y1="50" x2="360" y2="50"/><line x1="0" y1="100" x2="360" y2="100"/><line x1="0" y1="150" x2="360" y2="150"/>
+              </g>
+              <path d="M0 190 L0 124 C30 112 48 138 76 119 C110 96 130 78 162 94 C194 111 214 151 248 126 C286 98 308 65 360 82 L360 190 Z" fill="url(#curveFill)"></path>
+              <path d="M0 124 C30 112 48 138 76 119 C110 96 130 78 162 94 C194 111 214 151 248 126 C286 98 308 65 360 82" fill="none" stroke="var(--accent-2)" stroke-width="4" stroke-linecap="round"></path>
+            </svg>
+            <div class="readout"><b id="detailCurrent">0.0</b><span data-i18n="lastMinute">mA · 最近 60 秒</span></div>
+          </div>
+        </div>
+        <div class="form-panel">
+          <div><h2 data-i18n="singleParams">单通道参数</h2><p data-i18n="singleHint">点击数值弹出键盘，穴位可下拉选择并保存。</p></div>
+          <div class="form-grid">
+            <div class="field"><div class="field-label" data-i18n="acupoint">治疗穴位</div><select class="select" id="acupointSelect"></select></div>
+            <div class="field"><div class="field-label" data-i18n="waveform">刺激波形</div><div class="wave-row" id="waveRow"></div></div>
+            <div class="field"><div class="field-label" data-i18n="targetCurrent">目标电流</div><button class="numeric" data-input="targetCurrent" id="targetCurrentValue">0.0 mA</button></div>
+            <div class="field"><div class="field-label" data-i18n="frequency">频率</div><button class="numeric" data-input="frequency" id="frequencyValue">0 Hz</button></div>
+            <div class="field"><div class="field-label" data-i18n="pulseWidth">脉宽</div><button class="numeric" data-input="pulseWidth" id="pulseWidthValue">0 us</button></div>
+            <div class="field"><div class="field-label" data-i18n="duration">治疗时长</div><button class="numeric" data-input="duration" id="durationValue">0 min</button></div>
+          </div>
+          <div class="form-actions">
+            <div><button class="btn ghost" id="resetDetail" data-i18n="restore">恢复</button><button class="btn primary" id="saveDetail" data-i18n="save">保存</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-records">
+      <div class="section-head"><div><h2 data-i18n="recordsTitle">治疗记录</h2><p data-i18n="recordsSub">最近治疗摘要和本次治疗控制</p></div><button class="btn primary" data-i18n="export">导出</button></div>
+      <div class="records-layout">
+        <div class="records" id="recordList"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="settings-layout">
+        <div class="settings-nav" id="settingsNav">
+          <button class="active" data-settings="display" data-i18n="displaySettings">显示设置</button>
+          <button data-settings="sound" data-i18n="soundSettings">声音设置</button>
+          <button data-settings="network" data-i18n="networkSettings">网络设置</button>
+          <button data-settings="version" data-i18n="versionInfo">版本信息</button>
+        </div>
+        <div class="settings-panel" id="settingsPanel"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="nav">
+      <button class="active" data-page="home" data-i18n="navHome">主页</button>
+      <button data-page="channels" data-i18n="navChannels">通道</button>
+      <button data-page="detail" data-i18n="navSingle">单通道</button>
+      <button data-page="records" data-i18n="navRecords">记录</button>
+      <button data-page="settings" data-i18n="navSettings">设置</button>
+    </div>
+    <div class="global-actions"><button class="btn primary" id="allStart" data-i18n="start">开始</button><button class="btn warn" id="allPause" data-i18n="pause">暂停</button><button class="btn danger" id="allStop" data-i18n="stop">停止</button></div>
+  </footer>
+  <div class="keypad" id="keypad">
+    <div class="keypad-display" id="keypadDisplay">0</div>
+    <div class="keypad-grid">
+      <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
+      <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
+      <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
+      <button data-key=".">.</button><button data-key="0">0</button><button data-key="back">←</button>
+      <button data-key="clear" data-i18n="clear">清空</button><button data-key="cancel" data-i18n="cancel">取消</button><button class="ok" data-key="ok" data-i18n="ok">确定</button>
+    </div>
+  </div>
+  <div class="toast" id="toast">完成</div>
+</div>
+
+<script>
+const i18n={
+  zh:{
+    brandSub:"神经电针刺激治疗系统",online:"设备正常",homeTitle:"精准、舒适、可控的电针刺激",homeDesc:"面向多通道电刺激治疗场景，提供稳定输出、柔和渐进和清晰的安全反馈。",
+    feature1Title:"细腻输出",feature1Text:"电流、频率、脉宽可精细调节。",feature2Title:"舒适渐进",feature2Text:"刺激逐步建立，降低突兀感。",feature3Title:"安全守护",feature3Text:"关注连接和输出状态，异常及时提醒。",
+    overview4:"四通道总览",overview8:"八通道总览",overview4Sub:"大卡片监视布局，适合标准机型。",overview8Sub:"紧凑同屏布局，适合扩展机型。",running:"输出中",paused:"暂停",ready:"待机",settings:"设置",start:"开始",pause:"暂停",stop:"停止",
+    monitor:"监视",lastMinute:"mA · 最近 60 秒",saveStart:"保存并开始",backOverview:"返回总览",singleParams:"单通道参数",singleHint:"点击数值弹出键盘，穴位可下拉选择并保存。",acupoint:"治疗穴位",waveform:"刺激波形",targetCurrent:"目标电流",frequency:"频率",pulseWidth:"脉宽",duration:"治疗时长",copyVisible:"复制到当前产品",restore:"恢复",save:"保存",
+    recordsTitle:"治疗记录",recordsSub:"最近治疗摘要和本次治疗控制",export:"导出",currentSession:"当前治疗",currentSessionHint:"可在记录页直接开始、暂停或停止本次治疗。",
+    displaySettings:"显示设置",therapySettings:"治疗设置",deviceCheck:"设备检测",maintenance:"维护版本",themeColor:"主题色",themeHint:"红橙黄绿青蓝紫七种主题",background:"背景模式",backgroundHint:"支持黑色和白色背景",dark:"黑色",light:"白色",fontSize:"字体大小",fontHint:"当前最小档等于上一版最大字号",small:"小",medium:"中",large:"大",language:"语言",languageHint:"界面文本中英文切换",
+    therapyPlan:"治疗方案",therapyPlanHint:"选择常用电刺激方案",standardPlan:"标准方案",outputStrategy:"输出策略",outputStrategyHint:"控制刺激建立方式",progressive:"渐进",steady:"平稳",endReminder:"结束提醒",endReminderHint:"治疗完成后提示",
+    channelCheck:"通道检测",channelCheckHint:"检查连接状态与输出回路",startCheck:"开始检测",deviceStatus:"设备状态",deviceStatusHint:"连接稳定，电量充足",normal:"正常",safety:"安全保护",safetyHint:"异常时自动停止输出",
+    software:"软件版本",softwareHint:"UI Prototype v6.0",checkUpdate:"检查更新",deviceInfo:"设备信息",deviceInfoHint:"SND100 电针刺激治疗系统",connected:"已连接",resetSettings:"恢复设置",resetSettingsHint:"恢复显示与治疗默认值",
+    navHome:"主页",navChannels:"通道",navSingle:"单通道",navRecords:"记录",navSettings:"设置",clear:"清空",cancel:"取消",ok:"确定",done:"完成",started:"已开始",pausedToast:"已暂停",stopped:"已停止",saved:"已保存",savedStarted:"已保存并开始",copied:"已复制到当前产品",themeChanged:"主题色已切换",backgroundChanged:"背景已切换",fontChanged:"字体大小已调整",langChanged:"Language switched",executed:"已执行",
+    waves:["方波","正弦波","三角波"],points:["合谷 L","合谷 R","足三里 L","足三里 R","肩井 L","肩井 R","腰背 L","腰背 R","内关 L","内关 R"],
+    records:["标准刺激方案","舒缓刺激方案","自定义方案 A","标准刺激方案"],recordLines:["2026-07-16 15:32 · 正常完成 · 20 分钟","2026-07-16 10:18 · 正常完成 · 15 分钟","2026-07-15 16:40 · 提前停止 · 接触异常","2026-07-15 09:12 · 正常完成 · 20 分钟"]
+  },
+  en:{
+    brandSub:"Neuro electro-acupuncture system",online:"Device normal",homeTitle:"Precise, comfortable stimulation",homeDesc:"Built for multi-channel electrotherapy with stable output, gentle ramping, and clear safety feedback.",
+    feature1Title:"Fine Output",feature1Text:"Current, frequency, and pulse width are adjustable.",feature2Title:"Gentle Ramp",feature2Text:"Stimulation builds smoothly for comfort.",feature3Title:"Safety Guard",feature3Text:"Connection and output status stay visible.",
+    overview4:"4-channel overview",overview8:"8-channel overview",overview4Sub:"Large monitoring cards for the standard model.",overview8Sub:"Compact same-screen layout for the expanded model.",running:"Running",paused:"Paused",ready:"Ready",settings:"Set",start:"Start",pause:"Pause",stop:"Stop",
+    monitor:"Monitor",lastMinute:"mA · Last 60 seconds",saveStart:"Save & Start",backOverview:"Overview",singleParams:"Single Channel",singleHint:"Tap a value to open the keypad. Acupoints can be selected and saved.",acupoint:"Acupoint",waveform:"Waveform",targetCurrent:"Target Current",frequency:"Frequency",pulseWidth:"Pulse Width",duration:"Duration",copyVisible:"Copy to Product",restore:"Restore",save:"Save",
+    recordsTitle:"Treatment Records",recordsSub:"Recent sessions and current treatment control",export:"Export",currentSession:"Current Session",currentSessionHint:"Start, pause, or stop this session from the records page.",
+    displaySettings:"Display",therapySettings:"Therapy",deviceCheck:"Device Check",maintenance:"Version",themeColor:"Theme Color",themeHint:"Red, orange, yellow, green, cyan, blue, purple",background:"Background",backgroundHint:"Switch between dark and light modes",dark:"Dark",light:"Light",fontSize:"Font Size",fontHint:"The smallest size matches the previous largest size",small:"Small",medium:"Medium",large:"Large",language:"Language",languageHint:"Switch interface text between Chinese and English",
+    therapyPlan:"Therapy Plan",therapyPlanHint:"Choose a common stimulation plan",standardPlan:"Standard Plan",outputStrategy:"Output Strategy",outputStrategyHint:"Control how stimulation ramps up",progressive:"Ramp",steady:"Steady",endReminder:"End Reminder",endReminderHint:"Notify when treatment is complete",
+    channelCheck:"Channel Check",channelCheckHint:"Check connection and output circuit",startCheck:"Start Check",deviceStatus:"Device Status",deviceStatusHint:"Stable connection and sufficient battery",normal:"Normal",safety:"Safety Protection",safetyHint:"Stop output automatically on abnormal status",
+    software:"Software Version",softwareHint:"UI Prototype v6.0",checkUpdate:"Check Update",deviceInfo:"Device Info",deviceInfoHint:"SND100 electro-acupuncture system",connected:"Connected",resetSettings:"Reset Settings",resetSettingsHint:"Restore display and therapy defaults",
+    navHome:"Home",navChannels:"Channels",navSingle:"Single",navRecords:"Records",navSettings:"Settings",clear:"Clear",cancel:"Cancel",ok:"OK",done:"Done",started:"Started",pausedToast:"Paused",stopped:"Stopped",saved:"Saved",savedStarted:"Saved and started",copied:"Copied to current product",themeChanged:"Theme changed",backgroundChanged:"Background changed",fontChanged:"Font size adjusted",langChanged:"语言已切换",executed:"Executed",
+    waves:["Square","Sine","Triangle"],points:["Hegu L","Hegu R","Zusanli L","Zusanli R","Jianjing L","Jianjing R","Lumbar L","Lumbar R","Neiguan L","Neiguan R"],
+    records:["Standard Stimulation","Comfort Stimulation","Custom Plan A","Standard Stimulation"],recordLines:["2026-07-16 15:32 · Completed · 20 min","2026-07-16 10:18 · Completed · 15 min","2026-07-15 16:40 · Stopped early · Contact issue","2026-07-15 09:12 · Completed · 20 min"]
+  }
+};
+Object.assign(i18n.zh,{recordsSub:"仅显示历史治疗记录：通道、时间、刺激方式和时长"});
+Object.assign(i18n.en,{recordsSub:"History only: channel, time, stimulation mode, and duration"});
+Object.assign(i18n.zh,{wifiOk:"WiFi 已连接",wifiSettings:"WiFi 设置",wifiHint:"当前连接：SND100-Lab，信号强",wifiNetwork:"无线网络",wifiNetworkHint:"选择或重新连接局域网",wifiPassword:"WiFi 密码",wifiPasswordHint:"用于连接新的无线网络",wifiSignal:"WiFi 状态",wifiSignalHint:"SND100-Lab · 信号强 · 192.168.3.73",reconnect:"重新连接"});
+Object.assign(i18n.en,{wifiOk:"WiFi Connected",wifiSettings:"WiFi Settings",wifiHint:"Connected to SND100-Lab, strong signal",wifiNetwork:"Wireless Network",wifiNetworkHint:"Select or reconnect to LAN",wifiPassword:"WiFi Password",wifiPasswordHint:"Used when joining a new network",wifiSignal:"WiFi Status",wifiSignalHint:"SND100-Lab · Strong · 192.168.3.73",reconnect:"Reconnect"});
+Object.assign(i18n.zh,{soundSettings:"声音设置",networkSettings:"网络设置",versionInfo:"版本信息",soundVolume:"提示音量",soundVolumeHint:"调节按键和提醒音量",keyTone:"按键音",keyToneHint:"触摸按键时播放短提示音",alarmTone:"结束提醒音",alarmToneHint:"治疗结束或异常时提醒",wifiList:"WiFi 列表",wifiListHint:"SND100-Lab、Clinic-5G、Guest",connectedNetwork:"当前 WiFi",connectedNetworkHint:"SND100-Lab · 已连接 · 信号强",ipAddress:"IP 地址",ipAddressHint:"192.168.3.73",appVersion:"软件版本",appVersionHint:"UI Prototype v6.1",firmwareVersion:"固件版本",firmwareVersionHint:"Stim Core 1.3.8",versionUpdate:"版本更新",versionUpdateHint:"检查并安装可用更新"});
+Object.assign(i18n.en,{soundSettings:"Sound",networkSettings:"Network",versionInfo:"Version",soundVolume:"Alert Volume",soundVolumeHint:"Adjust key and notification volume",keyTone:"Key Tone",keyToneHint:"Play a short tone on touch",alarmTone:"End Alert",alarmToneHint:"Notify at treatment end or abnormal state",wifiList:"WiFi List",wifiListHint:"SND100-Lab, Clinic-5G, Guest",connectedNetwork:"Current WiFi",connectedNetworkHint:"SND100-Lab · Connected · Strong",ipAddress:"IP Address",ipAddressHint:"192.168.3.73",appVersion:"Software Version",appVersionHint:"UI Prototype v6.1",firmwareVersion:"Firmware Version",firmwareVersionHint:"Stim Core 1.3.8",versionUpdate:"Update",versionUpdateHint:"Check and install available updates"});
+Object.assign(i18n.zh,{wifiOff:"WiFi 已关闭"});
+Object.assign(i18n.en,{wifiOff:"WiFi Off"});
+Object.assign(i18n.zh,{promptTone:"提示",promptToneHint:"开启或关闭提示音"});
+Object.assign(i18n.en,{promptTone:"Prompt",promptToneHint:"Turn prompt tone on or off"});
+Object.assign(i18n.zh,{countdownTone:"倒计时提示音",countdownToneHint:"倒计时结束时播放提示音"});
+Object.assign(i18n.en,{countdownTone:"Countdown Tone",countdownToneHint:"Play tone when countdown finishes"});
+Object.assign(i18n.zh,{points:["合谷 L","合谷 R","足三里 L","足三里 R","肩井 L","肩井 R","腰背 L","腰背 R","内关 L","内关 R","曲池 L","曲池 R","三阴交 L","三阴交 R","阳陵泉 L","阳陵泉 R","太冲 L","太冲 R","百会","神门 L","神门 R","阿是穴 1","阿是穴 2","阿是穴 3"]});
+Object.assign(i18n.en,{points:["Hegu L","Hegu R","Zusanli L","Zusanli R","Jianjing L","Jianjing R","Lumbar L","Lumbar R","Neiguan L","Neiguan R","Quchi L","Quchi R","Sanyinjiao L","Sanyinjiao R","Yanglingquan L","Yanglingquan R","Taichong L","Taichong R","Baihui","Shenmen L","Shenmen R","Ashi 1","Ashi 2","Ashi 3"]});
+const themeColors=["#e5484d","#ef8b2c","#d7ad20","#3fa66b","#24a6a6","#3978d6","#8b5bd6"];
+const themeHighlights=["#ff9a76","#ffc46b","#ffe58a","#9ee8b5","#8de7dc","#9fc4ff","#cdb1ff"];
+const ranges={targetCurrent:{min:0,max:20,unit:"mA",decimals:1},frequency:{min:1,max:100,unit:"Hz",decimals:0},pulseWidth:{min:50,max:500,unit:"us",decimals:0},duration:{min:5,max:60,unit:"min",decimals:0}};
+let lang="zh";
+let product="8";
+let selectedId=1;
+let activeInput=null;
+let keypadValue="";
+let draft=null;
+let currentSettings="display";
+let sessionState="ready";
+let currentTheme=0;
+let wifiEnabled=true;
+const channels=Array.from({length:8},(_,i)=>({id:i+1,siteKey:i,state:i===0?"running":i===2?"paused":"ready",targetCurrent:[8,6.5,5,6,4,4.5,5.5,6][i],current:[8,6.5,5,6,4,4.5,5.5,6][i],frequency:[20,10,15,20,18,12,25,30][i],pulseWidth:[300,200,250,300,220,240,280,320][i],duration:[20,20,15,20,18,18,25,25][i],waveKey:[1,0,2,1,0,2,1,0][i]}));
+const t=key=>i18n[lang][key] ?? key;
+function showToast(text){const el=document.getElementById("toast");el.textContent=text;el.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>el.classList.remove("show"),1300)}
+function setPage(name){closeKeypad();document.querySelectorAll(".page").forEach(page=>page.classList.toggle("active",page.id===`page-${name}`));document.querySelectorAll(".nav button").forEach(btn=>btn.classList.toggle("active",btn.dataset.page===name))}
+function visibleChannels(){return channels}
+function stateText(state){return t(state)}
+function format(key,value){const r=ranges[key];return `${Number(value).toFixed(r.decimals)} ${r.unit}`}
+function clampInput(key,value){const r=ranges[key];const number=Number.parseFloat(value);if(Number.isNaN(number)) return draft[key];return Math.max(r.min,Math.min(r.max,Number(number.toFixed(r.decimals))))}
+function applyText(){document.documentElement.lang=lang==="zh"?"zh-CN":"en";document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=t(el.dataset.i18n)});document.querySelectorAll("[data-lang]").forEach(btn=>btn.classList.toggle("active",btn.dataset.lang===lang));renderProducts();renderDetail();renderRecords();renderSettings()}
+function renderProducts(){
+  document.getElementById("overviewTitle").textContent=lang==="zh"?"通道总览":"Channel Overview";
+  document.getElementById("overviewSub").textContent=lang==="zh"?"8 个通道同屏查看，点击设置进入单通道监视。":"View 8 channels on one screen. Tap Set for single-channel monitoring.";
+  const points=i18n[lang].points,waves=i18n[lang].waves;
+  const grid=document.getElementById("channelGrid");
+  grid.className="channel-grid product-8";
+  grid.innerHTML=visibleChannels().map(ch=>`
+    <article class="channel-card product-8">
+      <div class="channel-top">
+        <div><div class="channel-name">CH ${ch.id}</div><div class="channel-site">${points[ch.siteKey]}</div></div>
+        <div class="pill ${ch.state}">${stateText(ch.state)}</div>
+      </div>
+      <div class="channel-mid">
+        <div><div><span class="big-value">${(ch.state==="ready"?ch.targetCurrent:ch.current).toFixed(1)}</span><span class="unit">mA</span></div><div class="subline">${waves[ch.waveKey]} · ${ch.frequency}Hz · ${ch.duration}min</div></div>
+      </div>
+      <div class="channel-actions"><button class="btn ghost" data-edit="${ch.id}">${t("settings")}</button><button class="btn ${ch.state==="running"?"warn":"primary"}" data-run="${ch.id}">${ch.state==="running"?t("pause"):t("start")}</button></div>
+    </article>`).join("");
+}
+function openDetail(id){selectedId=id;draft={...channels.find(ch=>ch.id===id)};renderDetail();setPage("detail")}
+function renderDetail(){
+  if(!draft) return;
+  const points=i18n[lang].points,waves=i18n[lang].waves;
+  document.getElementById("detailTitle").textContent=`CH ${draft.id} ${t("monitor")}`;
+  document.getElementById("detailSub").textContent=`${points[draft.siteKey]} · ${waves[draft.waveKey]} · ${draft.frequency}Hz`;
+  document.getElementById("detailCurrent").textContent=draft.current.toFixed(1);
+  document.getElementById("waveRow").innerHTML=waves.map((w,index)=>`<button class="${draft.waveKey===index?"active":""}" data-wave="${index}">${w}</button>`).join("");
+  document.getElementById("acupointSelect").innerHTML=points.map((point,index)=>`<option value="${index}" ${draft.siteKey===index?"selected":""}>${point}</option>`).join("");
+  document.getElementById("targetCurrentValue").textContent=format("targetCurrent",draft.targetCurrent);
+  document.getElementById("frequencyValue").textContent=format("frequency",draft.frequency);
+  document.getElementById("pulseWidthValue").textContent=format("pulseWidth",draft.pulseWidth);
+  document.getElementById("durationValue").textContent=format("duration",draft.duration);
+}
+function saveDetail(start=false){
+  draft.siteKey=Number(document.getElementById("acupointSelect").value);
+  const channel=channels.find(ch=>ch.id===selectedId);
+  Object.assign(channel,draft);
+  if(start){channel.state="running";channel.current=channel.targetCurrent;draft.state="running";draft.current=channel.current}
+  renderProducts();renderDetail();showToast(start?t("savedStarted"):t("saved"));
+}
+function setVisibleState(state){visibleChannels().forEach(ch=>{ch.state=state;if(state!=="paused") ch.current=ch.targetCurrent});renderProducts()}
+function setSessionState(state){sessionState=state;document.getElementById("recordStatus").textContent=stateText(state);showToast(state==="running"?t("started"):state==="paused"?t("pausedToast"):t("stopped"))}
+function openKeypad(key){activeInput=key;keypadValue=String(draft[key]);document.getElementById("keypadDisplay").textContent=keypadValue;document.getElementById("keypad").classList.add("open")}
+function closeKeypad(){document.getElementById("keypad").classList.remove("open")}
+function applyTheme(index){currentTheme=index;document.documentElement.style.setProperty("--accent",themeColors[index]);document.documentElement.style.setProperty("--accent-2",themeHighlights[index]);document.querySelectorAll(".swatch").forEach((btn,i)=>btn.classList.toggle("active",i===index))}
+function updateWifiIcon(){document.querySelector(".wifi-status")?.classList.toggle("disconnected",!wifiEnabled)}
+function renderRecords(){
+  const labels=lang==="zh"
+    ? {time:"时间",mode:"方式",duration:"时长"}
+    : {time:"Time",mode:"Mode",duration:"Duration"};
+  const records=lang==="zh"
+    ? [
+      {ch:"CH 5",time:"2026-07-13 09:20",mode:"方波 12Hz",duration:"12 分钟"},
+      {ch:"CH 6",time:"2026-07-13 14:05",mode:"正弦波 18Hz",duration:"18 分钟"},
+      {ch:"CH 8",time:"2026-07-14 08:40",mode:"三角波 25Hz",duration:"20 分钟"},
+      {ch:"CH 3",time:"2026-07-14 13:10",mode:"方波 15Hz",duration:"15 分钟"},
+      {ch:"CH 1",time:"2026-07-14 17:36",mode:"正弦波 20Hz",duration:"20 分钟"},
+      {ch:"CH 2",time:"2026-07-15 09:12",mode:"方波 10Hz",duration:"20 分钟"},
+      {ch:"CH 7",time:"2026-07-15 10:28",mode:"三角波 25Hz",duration:"18 分钟"},
+      {ch:"CH 4",time:"2026-07-15 16:40",mode:"正弦波 20Hz",duration:"18 分钟"},
+      {ch:"CH 6",time:"2026-07-15 18:05",mode:"方波 12Hz",duration:"16 分钟"},
+      {ch:"CH 1",time:"2026-07-16 08:58",mode:"正弦波 20Hz",duration:"20 分钟"},
+      {ch:"CH 2",time:"2026-07-16 10:18",mode:"方波 10Hz",duration:"15 分钟"},
+      {ch:"CH 3",time:"2026-07-16 11:45",mode:"三角波 15Hz",duration:"15 分钟"},
+      {ch:"CH 5",time:"2026-07-16 14:22",mode:"方波 18Hz",duration:"18 分钟"},
+      {ch:"CH 1",time:"2026-07-16 15:32",mode:"正弦波 20Hz",duration:"20 分钟"},
+      {ch:"CH 4",time:"2026-07-16 16:50",mode:"正弦波 22Hz",duration:"20 分钟"},
+      {ch:"CH 8",time:"2026-07-16 18:06",mode:"三角波 30Hz",duration:"15 分钟"},
+      {ch:"CH 6",time:"2026-07-17 09:18",mode:"方波 12Hz",duration:"20 分钟"},
+      {ch:"CH 7",time:"2026-07-17 10:42",mode:"正弦波 25Hz",duration:"18 分钟"}
+    ]
+    : [
+      {ch:"CH 5",time:"2026-07-13 09:20",mode:"Square 12Hz",duration:"12 min"},
+      {ch:"CH 6",time:"2026-07-13 14:05",mode:"Sine 18Hz",duration:"18 min"},
+      {ch:"CH 8",time:"2026-07-14 08:40",mode:"Triangle 25Hz",duration:"20 min"},
+      {ch:"CH 3",time:"2026-07-14 13:10",mode:"Square 15Hz",duration:"15 min"},
+      {ch:"CH 1",time:"2026-07-14 17:36",mode:"Sine 20Hz",duration:"20 min"},
+      {ch:"CH 2",time:"2026-07-15 09:12",mode:"Square 10Hz",duration:"20 min"},
+      {ch:"CH 7",time:"2026-07-15 10:28",mode:"Triangle 25Hz",duration:"18 min"},
+      {ch:"CH 4",time:"2026-07-15 16:40",mode:"Sine 20Hz",duration:"18 min"},
+      {ch:"CH 6",time:"2026-07-15 18:05",mode:"Square 12Hz",duration:"16 min"},
+      {ch:"CH 1",time:"2026-07-16 08:58",mode:"Sine 20Hz",duration:"20 min"},
+      {ch:"CH 2",time:"2026-07-16 10:18",mode:"Square 10Hz",duration:"15 min"},
+      {ch:"CH 3",time:"2026-07-16 11:45",mode:"Triangle 15Hz",duration:"15 min"},
+      {ch:"CH 5",time:"2026-07-16 14:22",mode:"Square 18Hz",duration:"18 min"},
+      {ch:"CH 1",time:"2026-07-16 15:32",mode:"Sine 20Hz",duration:"20 min"},
+      {ch:"CH 4",time:"2026-07-16 16:50",mode:"Sine 22Hz",duration:"20 min"},
+      {ch:"CH 8",time:"2026-07-16 18:06",mode:"Triangle 30Hz",duration:"15 min"},
+      {ch:"CH 6",time:"2026-07-17 09:18",mode:"Square 12Hz",duration:"20 min"},
+      {ch:"CH 7",time:"2026-07-17 10:42",mode:"Sine 25Hz",duration:"18 min"}
+    ];
+  while(records.length>16) records.shift();
+  document.getElementById("recordList").innerHTML=records.map(item=>`
+    <div class="record">
+      <b>${item.ch}</b>
+      <div class="record-meta">
+        <div><strong>${labels.time}</strong> ${item.time}</div>
+        <div><strong>${labels.mode}</strong> ${item.mode}</div>
+        <div><strong>${labels.duration}</strong> ${item.duration}</div>
+      </div>
+    </div>`).join("");
+}
+function renderSettings(){
+  const panel=document.getElementById("settingsPanel");
+  const active=currentSettings;
+  document.querySelectorAll("#settingsNav button").forEach(btn=>btn.classList.toggle("active",btn.dataset.settings===active));
+  if(active==="display"){
+    panel.innerHTML=`
+      <div class="setting-row"><div><b>${t("language")}</b><span>${t("languageHint")}</span></div><div class="bg-options"><button class="choice ${lang==="zh"?"active":""}" data-lang-choice="zh">中文</button><button class="choice ${lang==="en"?"active":""}" data-lang-choice="en">English</button></div></div>
+      <div class="setting-row"><div><b>${t("themeColor")}</b><span>${t("themeHint")}</span></div><div class="theme-options">${themeColors.map((color,index)=>`<button class="swatch ${index===currentTheme?"active":""}" data-theme="${index}" style="--swatch:${color}"></button>`).join("")}</div></div>
+      <div class="setting-row"><div><b>${t("background")}</b><span>${t("backgroundHint")}</span></div><div class="bg-options"><button class="choice ${document.body.classList.contains("light")?"":"active"}" data-bg="dark">${t("dark")}</button><button class="choice ${document.body.classList.contains("light")?"active":""}" data-bg="light">${t("light")}</button></div></div>
+      <div class="setting-row"><div><b>${t("fontSize")}</b><span>${t("fontHint")}</span></div><div class="font-options"><button class="choice ${document.body.classList.contains("font-1")?"active":""}" data-font="1">${t("small")}</button><button class="choice ${document.body.classList.contains("font-2")?"active":""}" data-font="2">${t("medium")}</button><button class="choice ${document.body.classList.contains("font-3")?"active":""}" data-font="3">${t("large")}</button></div></div>`;
+    return;
+  }
+  if(active==="sound"){
+    panel.innerHTML=`
+      <div class="setting-row"><div><b>${t("soundVolume")}</b><span>${t("soundVolumeHint")}</span></div><input type="range" min="0" max="100" value="70"></div>
+      <div class="setting-row"><div><b>${t("countdownTone")}</b><span>${t("countdownToneHint")}</span></div><button class="switch on" data-switch><span></span></button></div>`;
+    return;
+  }
+  if(active==="network"){
+    const wifiInfo=wifiEnabled?`
+      <div class="setting-row"><div><b>${t("connectedNetwork")}</b><span>${t("connectedNetworkHint")}</span></div><span>${t("connected")}</span></div>
+      <div class="setting-row"><div><b>${t("ipAddress")}</b><span>${t("ipAddressHint")}</span></div><span>${t("normal")}</span></div>`:"";
+    panel.innerHTML=`
+      <div class="setting-row"><div><b>${t("wifiSettings")}</b><span>${wifiEnabled?t("wifiHint"):t("wifiOff")}</span></div><button class="switch ${wifiEnabled?"on":""}" data-wifi-switch><span></span></button></div>
+      ${wifiInfo}`;
+    return;
+  }
+  panel.innerHTML=`
+    <div class="setting-row"><div><b>${t("appVersion")}</b></div><span>UI Prototype v6.1</span></div>
+    <div class="setting-row"><div><b>${t("firmwareVersion")}</b></div><span>Stim Core 1.3.8</span></div>
+    <div class="setting-row"><div><b>${t("versionUpdate")}</b><span>${t("versionUpdateHint")}</span></div><button class="btn ghost" data-setting-action>${t("checkUpdate")}</button></div>`;
+}
+document.addEventListener("click",event=>{
+  const goto=event.target.closest("[data-goto]");if(goto) setPage(goto.dataset.goto);
+  const edit=event.target.closest("[data-edit]");if(edit) openDetail(Number(edit.dataset.edit));
+  const run=event.target.closest("[data-run]");if(run){const ch=channels.find(item=>item.id===Number(run.dataset.run));ch.state=ch.state==="running"?"paused":"running";ch.current=ch.targetCurrent;renderProducts()}
+  const numeric=event.target.closest("[data-input]");if(numeric && draft) openKeypad(numeric.dataset.input);
+});
+document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>setPage(btn.dataset.page)));
+document.querySelectorAll("[data-lang]").forEach(btn=>btn.addEventListener("click",()=>{lang=btn.dataset.lang;applyText();showToast(t("langChanged"))}));
+document.getElementById("waveRow").addEventListener("click",event=>{const btn=event.target.closest("[data-wave]");if(!btn) return;draft.waveKey=Number(btn.dataset.wave);renderDetail()});
+document.getElementById("allStart").onclick=()=>{setVisibleState("running");showToast(t("started"))};
+document.getElementById("allPause").onclick=()=>{setVisibleState("paused");showToast(t("pausedToast"))};
+document.getElementById("allStop").onclick=()=>{setVisibleState("ready");showToast(t("stopped"))};
+document.getElementById("saveDetail").onclick=()=>saveDetail(false);
+document.getElementById("resetDetail").onclick=()=>openDetail(selectedId);
+document.getElementById("keypad").addEventListener("click",event=>{
+  const key=event.target.closest("[data-key]")?.dataset.key;if(!key) return;
+  if(key==="cancel"){closeKeypad();return}
+  if(key==="clear"){keypadValue="";document.getElementById("keypadDisplay").textContent="0";return}
+  if(key==="back"){keypadValue=keypadValue.slice(0,-1);document.getElementById("keypadDisplay").textContent=keypadValue||"0";return}
+  if(key==="ok"){draft[activeInput]=clampInput(activeInput,keypadValue);closeKeypad();renderDetail();return}
+  if(key==="." && keypadValue.includes(".")) return;
+  keypadValue=(keypadValue==="0" && key!==".")?key:keypadValue+key;
+  document.getElementById("keypadDisplay").textContent=keypadValue;
+});
+document.getElementById("settingsNav").addEventListener("click",event=>{const btn=event.target.closest("[data-settings]");if(!btn) return;currentSettings=btn.dataset.settings;renderSettings()});
+document.getElementById("settingsPanel").addEventListener("click",event=>{
+  const langBtn=event.target.closest("[data-lang-choice]");if(langBtn){lang=langBtn.dataset.langChoice;applyText();showToast(t("langChanged"));return}
+  const themeBtn=event.target.closest("[data-theme]");if(themeBtn){applyTheme(Number(themeBtn.dataset.theme));showToast(t("themeChanged"));return}
+  const bgBtn=event.target.closest("[data-bg]");if(bgBtn){document.body.classList.toggle("light",bgBtn.dataset.bg==="light");renderSettings();showToast(t("backgroundChanged"));return}
+  const fontBtn=event.target.closest("[data-font]");if(fontBtn){document.body.classList.remove("font-1","font-2","font-3");document.body.classList.add(`font-${fontBtn.dataset.font}`);renderSettings();showToast(t("fontChanged"));return}
+  const wifiBtn=event.target.closest("[data-wifi-switch]");if(wifiBtn){wifiEnabled=!wifiEnabled;updateWifiIcon();renderSettings();return}
+  const sw=event.target.closest("[data-switch]");if(sw){sw.classList.toggle("on");return}
+  const action=event.target.closest("[data-setting-action]");if(action) showToast(`${action.textContent.trim()} ${t("executed")}`);
+});
+setInterval(()=>{const now=new Date();document.getElementById("clock").textContent=`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`},1000);
+openDetail(1);
+setPage("home");
+renderRecords();
+renderSettings();
+applyText();
+updateWifiIcon();
+</script>
+</body>
+</html>

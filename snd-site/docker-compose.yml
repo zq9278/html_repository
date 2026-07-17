@@ -1,0 +1,8 @@
+services:
+  snd-web:
+    image: snd-ui-prototype:latest
+    build: .
+    container_name: snd-web
+    restart: unless-stopped
+    ports:
+      - "18080:80"
