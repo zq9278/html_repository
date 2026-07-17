@@ -1,0 +1,8 @@
+services:
+  www-sanitlook-web:
+    image: www-sanitlook-site:latest
+    build: .
+    container_name: www-sanitlook-web
+    restart: unless-stopped
+    ports:
+      - "18081:80"
