@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SND100 Smart Neuromodulation Device | Hangzhou Linuokang Biotechnology Co., Ltd.</title>
+  <meta name="description" content="SND100 Smart Neuromodulation Device by Hangzhou Linuokang Biotechnology Co., Ltd. Product and electrode specifications for professional medical use." />
+  <style>
+    :root {
+      --ink: #172126;
+      --muted: #5d6a70;
+      --line: #dce5e8;
+      --teal: #117c7b;
+      --blue: #2d5578;
+      --mint: #e8f4f1;
+      --white: #ffffff;
+      --soft: #f7faf9;
+      --accent: #b5863b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--white);
+      line-height: 1.55;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav {
+      width: min(1180px, calc(100% - 32px));
+      height: 68px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--teal), var(--blue));
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0;
+      flex: 0 0 auto;
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .brand-text span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+      margin-top: 2px;
+    }
+
+    .navlinks {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .navlinks a:hover { color: var(--teal); }
+
+    .hero {
+      min-height: calc(100vh - 68px);
+      display: grid;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.86) 42%, rgba(255,255,255,0.18) 72%),
+        url("assets/hero-device.png") center right / cover no-repeat;
+    }
+
+    .hero-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 82px 0 96px;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .kicker::before {
+      content: "";
+      width: 24px;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    h1 {
+      max-width: 620px;
+      margin: 18px 0 22px;
+      font-size: clamp(42px, 6vw, 76px);
+      line-height: 0.96;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      max-width: 570px;
+      color: var(--muted);
+      font-size: 18px;
+      margin: 0 0 34px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 6px;
+      border: 1px solid var(--teal);
+      background: var(--teal);
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .button.secondary {
+      background: white;
+      color: var(--teal);
+    }
+
+    section {
+      padding: 78px 0;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .section-head p {
+      max-width: 520px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .band {
+      background: var(--soft);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .spec {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      background: white;
+      min-height: 132px;
+    }
+
+    .spec span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .spec strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.22;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 42px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      background: white;
+    }
+
+    .panel h3 {
+      margin: 0 0 16px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    .data-table th,
+    .data-table td {
+      text-align: left;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    .data-table tr:last-child th,
+    .data-table tr:last-child td { border-bottom: 0; }
+
+    .data-table th {
+      width: 38%;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .feature-list li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px;
+      align-items: start;
+      color: var(--muted);
+    }
+
+    .check {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--mint);
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .manufacturer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .info-block {
+      border-left: 3px solid var(--teal);
+      padding: 6px 0 6px 18px;
+    }
+
+    .info-block span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .info-block strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    footer {
+      padding: 34px 0;
+      background: #10181b;
+      color: rgba(255,255,255,0.72);
+      font-size: 13px;
+    }
+
+    .footer-row {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 860px) {
+      .nav { height: auto; padding: 14px 0; align-items: flex-start; }
+      .navlinks { display: none; }
+      .hero {
+        min-height: auto;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.9) 54%, rgba(255,255,255,0.35) 100%),
+          url("assets/hero-device.png") center bottom / cover no-repeat;
+      }
+      .hero-inner { padding: 66px 0 280px; }
+      .hero-copy { font-size: 16px; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 12px; }
+      .spec-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .split, .manufacturer { grid-template-columns: 1fr; }
+      section { padding: 58px 0; }
+    }
+
+    @media (max-width: 520px) {
+      .brand-text strong { font-size: 13px; }
+      .brand-text span { font-size: 11px; }
+      .spec-grid { grid-template-columns: 1fr; }
+      .hero-inner { padding-bottom: 230px; }
+      .panel, .spec { padding: 20px; }
+      .data-table th, .data-table td { display: block; width: 100%; padding: 8px 0; }
+      .data-table th { border-bottom: 0; padding-top: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="#home" aria-label="Hangzhou Linuokang Biotechnology home">
+        <span class="mark">LK</span>
+        <span class="brand-text">
+          <strong>Hangzhou Linuokang Biotechnology Co., Ltd.</strong>
+          <span>Smart Neuromodulation Device</span>
+        </span>
+      </a>
+      <div class="navlinks">
+        <a href="#device">Device</a>
+        <a href="#electrode">Electrode</a>
+        <a href="#manufacturer">Manufacturer</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="home">
+    <section class="hero" aria-label="SND100 product overview">
+      <div class="hero-inner">
+        <span class="kicker">Model SND100</span>
+        <h1>Smart Neuromodulation Device</h1>
+        <p class="hero-copy">
+          An intelligent neural electrical stimulation platform presented by Hangzhou Linuokang Biotechnology Co., Ltd. for professional medical environments requiring precise device and electrode information.
+        </p>
+        <div class="actions">
+          <a class="button" href="#device">View Device Information</a>
+          <a class="button secondary" href="#electrode">Electrode Specifications</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="device">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Device Information</h2>
+          <p>Core identification information for the Smart Neuromodulation Device, model SND100.</p>
+        </div>
+        <div class="spec-grid">
+          <div class="spec">
+            <span>Device Name</span>
+            <strong>Smart Neuromodulation Device</strong>
+          </div>
+          <div class="spec">
+            <span>Model</span>
+            <strong>SND100</strong>
+          </div>
+          <div class="spec">
+            <span>Technology Category</span>
+            <strong>Neural electrical stimulation</strong>
+          </div>
+          <div class="spec">
+            <span>Use Environment</span>
+            <strong>Professional medical settings</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="electrode" class="band">
+      <div class="wrap split">
+        <div class="section-head">
+          <div>
+            <h2>Electrode Specifications</h2>
+            <p>The SND100 system information includes a concentric bipolar stainless steel needle electrode configuration.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Needle Electrode</h3>
+          <table class="data-table" aria-label="Electrode specifications">
+            <tr>
+              <th>Type</th>
+              <td>Concentric bipolar stainless steel needle electrode</td>
+            </tr>
+            <tr>
+              <th>Needle Length</th>
+              <td>25 mm</td>
+            </tr>
+            <tr>
+              <th>Outer Diameter</th>
+              <td>25 G, approximately 0.5 mm</td>
+            </tr>
+            <tr>
+              <th>Inner Diameter</th>
+              <td>30 G, approximately 0.3 mm</td>
+            </tr>
+            <tr>
+              <th>Weight</th>
+              <td>2 g</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap split">
+        <div>
+          <div class="section-head">
+            <div>
+              <h2>Designed For Controlled Stimulation Workflows</h2>
+              <p>A concise product information page for technical review, distribution, and clinical procurement conversations.</p>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <ul class="feature-list">
+            <li>
+              <span class="check">✓</span>
+              <span>Clear device identity and model information for reference and documentation.</span>
+            </li>
+            <li>
+              <span class="check">✓</span>
+              <span>Electrode dimensions presented in both gauge and approximate metric values.</span>
+            </li>
+            <li>
+              <span class="check">✓</span>
+              <span>Manufacturer address and company identity displayed for business communication.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="manufacturer" class="band">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Manufacturer Information</h2>
+          <p>Published under the identity of Hangzhou Linuokang Biotechnology Co., Ltd.</p>
+        </div>
+        <div class="manufacturer">
+          <div class="panel">
+            <div class="info-block">
+              <span>Manufacturer</span>
+              <strong>Hangzhou Linuokang Biotechnology Co., Ltd.</strong>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="info-block">
+              <span>Address</span>
+              <strong>No. 12 Street, Xiasha District, Hangzhou, Zhejiang, China</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-row">
+      <span>© Hangzhou Linuokang Biotechnology Co., Ltd.</span>
+      <span>Product information page for SND100 Smart Neuromodulation Device.</span>
+    </div>
+  </footer>
+</body>
+</html>
