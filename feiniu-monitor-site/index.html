@@ -210,6 +210,13 @@
       font-size: 12px;
       padding: 4px 8px;
     }
+    .folder-tools {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
     .stack {
       display: grid;
       gap: 16px;
@@ -409,6 +416,7 @@
     const publicHost = location.hostname || "sanitlook.cn";
     let folderState = { folders: ["业务网站", "管理工具", "系统入口", "其他网站"], assignments: {} };
     let lastSites = [];
+    let folderDirty = false;
     const $ = (id) => document.getElementById(id);
 
     function esc(value) {
@@ -464,6 +472,10 @@
       return folderState.folders.map((name) => `<option value="${esc(name)}" ${name === selected ? "selected" : ""}>${esc(name)}</option>`).join("");
     }
 
+    function defaultFolders() {
+      return ["业务网站", "管理工具", "系统入口", "其他网站"];
+    }
+
     function renderSiteFolders(sites) {
       if (!sites.length) {
         $("siteFolders").innerHTML = '<div class="empty">暂无网站</div>';
@@ -488,7 +500,9 @@
             : `<button class="action-btn" type="button" disabled>保留</button>`;
           return `<div class="site-item"><div class="site-main"><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></div><div>${tag(item.port, "warn")}</div><div>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</div><div><select class="folder-select" data-move-port="${esc(item.port)}">${folderOptions(siteGroup(item))}</select></div><div><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a> ${button}</div></div>`;
         }).join("") : '<div class="empty">这个文件夹还没有网站，可以用“移动到”把网站放进来。</div>';
-        return `<details class="folder ${items.length ? "" : "empty-folder"}" ${index === 0 || items.length === 0 ? "open" : ""}><summary><span class="folder-title"><span class="folder-icon"></span>${esc(name)}</span><span class="small">${items.length} 个 · ${healthy} 正常</span></summary>${body}</details>`;
+        const canRemove = !defaultFolders().includes(name);
+        const removeButton = canRemove ? `<button class="action-btn danger" type="button" data-remove-folder="${esc(name)}">删除文件夹</button>` : "";
+        return `<details class="folder ${items.length ? "" : "empty-folder"}" ${index === 0 || items.length === 0 ? "open" : ""}><summary><span class="folder-title"><span class="folder-icon"></span>${esc(name)}</span><span class="folder-tools"><span class="small">${items.length} 个 · ${healthy} 正常</span>${removeButton}</span></summary>${body}</details>`;
       }).join("");
     }
 
@@ -498,7 +512,7 @@
       const ports = data.ports || [];
       const scripts = data.scripts || [];
       const actions = data.actions || [];
-      folderState = normalizeFolderState(data.folderConfig || folderState);
+      if (!folderDirty) folderState = normalizeFolderState(data.folderConfig || folderState);
       lastSites = sites;
       const running = containers.filter((item) => /^Up/.test(item.status || "")).length;
       const healthy = sites.filter((item) => item.httpStatus === 200).length;
@@ -554,14 +568,30 @@
       document.querySelectorAll("[data-move-port]").forEach((select) => {
         select.onchange = () => {
           folderState.assignments[String(select.dataset.movePort)] = select.value;
+          folderDirty = true;
           renderSiteFolders(lastSites);
           bindFolderControls();
           $("liveText").textContent = "文件夹变更未保存";
         };
       });
+      document.querySelectorAll("[data-remove-folder]").forEach((button) => {
+        button.onclick = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          removeFolder(button.dataset.removeFolder);
+        };
+      });
 
       $("liveDot").className = "dot ok";
-      $("liveText").textContent = `已更新 ${data.generatedAtLocal || ""}`;
+      if (!folderDirty) $("liveText").textContent = `已更新 ${data.generatedAtLocal || ""}`;
+    }
+
+    function getAdminPassword() {
+      const cached = sessionStorage.getItem("feiniuMonitorAdminPassword");
+      if (cached) return cached;
+      const password = prompt("请输入监控管理密码：");
+      if (password) sessionStorage.setItem("feiniuMonitorAdminPassword", password);
+      return password;
     }
 
     async function load() {
@@ -578,7 +608,7 @@
     async function deleteSite(port, name) {
       const confirmText = `确认删除 ${name}（端口 ${port}）吗？容器会停止，目录会移动到 /vol1/docker/_deleted-sites。`;
       if (!confirm(confirmText)) return;
-      const password = prompt("请输入监控管理密码：");
+      const password = getAdminPassword();
       if (!password) return;
       try {
         const response = await fetch("cgi-bin/action.sh", {
@@ -592,6 +622,7 @@
         $("liveText").textContent = "删除请求已提交，等待主机处理...";
         setTimeout(load, 3000);
       } catch (error) {
+        if (/密码/.test(error.message)) sessionStorage.removeItem("feiniuMonitorAdminPassword");
         $("liveDot").className = "dot bad";
         $("liveText").textContent = `删除请求失败：${error.message}`;
       }
@@ -607,6 +638,7 @@
           return;
         }
         if (!folderState.folders.includes(trimmed)) folderState.folders.push(trimmed);
+        folderDirty = true;
         renderSiteFolders(lastSites);
         bindFolderControls();
         $("liveText").textContent = "新文件夹未保存";
@@ -614,8 +646,20 @@
       $("saveFoldersBtn").onclick = saveFolders;
     }
 
+    function removeFolder(name) {
+      if (!confirm(`删除文件夹“${name}”吗？里面的网站会移动到“业务网站”。`)) return;
+      folderState.folders = folderState.folders.filter((item) => item !== name);
+      Object.entries(folderState.assignments).forEach(([port, folder]) => {
+        if (folder === name) folderState.assignments[port] = "业务网站";
+      });
+      folderDirty = true;
+      renderSiteFolders(lastSites);
+      bindFolderControls();
+      $("liveText").textContent = "文件夹删除未保存";
+    }
+
     async function saveFolders() {
-      const password = prompt("请输入监控管理密码：");
+      const password = getAdminPassword();
       if (!password) return;
       try {
         const configBytes = new TextEncoder().encode(JSON.stringify({ folders: folderState.folders, assignments: folderState.assignments }));
@@ -628,10 +672,12 @@
         });
         const result = await response.json();
         if (!result.ok) throw new Error(result.error || "提交失败");
+        folderDirty = false;
         $("liveDot").className = "dot ok";
         $("liveText").textContent = "文件夹保存请求已提交...";
         setTimeout(load, 3000);
       } catch (error) {
+        if (/密码/.test(error.message)) sessionStorage.removeItem("feiniuMonitorAdminPassword");
         $("liveDot").className = "dot bad";
         $("liveText").textContent = `文件夹保存失败：${error.message}`;
       }
