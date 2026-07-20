@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily sync for Feiniu Docker websites and data
+
+[Timer]
+OnBootSec=5min
+OnCalendar=*-*-* 03:20:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

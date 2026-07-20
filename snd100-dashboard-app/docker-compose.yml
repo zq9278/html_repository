@@ -1,0 +1,10 @@
+services:
+  snd100-dashboard-app:
+    image: snd100-dashboard-app:latest
+    build: .
+    container_name: snd100-dashboard-app
+    restart: unless-stopped
+    ports:
+      - "18083:80"
+    volumes:
+      - ./data:/data

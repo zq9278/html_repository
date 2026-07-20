@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SND100 设计管理面板</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #fff;
+      --text: #1f2937;
+      --muted: #667085;
+      --line: #dbe3ee;
+      --blue: #1f6feb;
+      --green: #16855f;
+      --red: #c23b3b;
+      --shadow: 0 12px 28px rgba(31, 41, 55, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(180deg, #edf5ff 0, #f8fbff 260px, var(--bg) 100%);
+      color: var(--text);
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .container { width: min(1480px, calc(100% - 28px)); margin: 0 auto; padding: 24px 0 34px; }
+    .header { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: clamp(26px, 3vw, 34px); line-height: 1.15; letter-spacing: 0; }
+    .subtitle { margin: 0; color: var(--muted); line-height: 1.6; max-width: 780px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+    .btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .btn.danger { color: var(--red); }
+    .save-state { width: 100%; text-align: right; color: var(--muted); font-size: 12px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+    .summary-card {
+      background: var(--panel);
+      border: 1px solid rgba(219, 227, 238, .9);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      min-height: 126px;
+    }
+    .label { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .value { font-size: 28px; font-weight: 800; line-height: 1.2; }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 7px; line-height: 1.4; }
+    .progress-shell { height: 12px; border-radius: 999px; background: #e3ebf5; overflow: hidden; margin-top: 14px; }
+    .progress-bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), #6aa4ff); }
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+    .toolbar input, .toolbar select, .status, .owner, textarea {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 9px 10px;
+      min-height: 40px;
+    }
+    .toolbar input { flex: 1; min-width: min(460px, 100%); }
+    .layout { display: grid; grid-template-columns: 288px 1fr; gap: 18px; }
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      height: max-content;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .sidebar h2 { margin: 4px 8px 12px; font-size: 18px; }
+    .module-nav { display: flex; flex-direction: column; gap: 6px; }
+    .module-link { border: 0; background: transparent; text-align: left; padding: 10px 11px; border-radius: 8px; color: var(--text); }
+    .module-link:hover { background: #eaf2ff; color: #174f9e; }
+    .module-link strong { display: block; font-size: 14px; line-height: 1.35; }
+    .module-link span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .content { display: flex; flex-direction: column; gap: 16px; }
+    .module-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      scroll-margin-top: 20px;
+    }
+    .module-head { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+    .module-head h3 { margin: 0; font-size: 21px; letter-spacing: 0; }
+    .module-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .module-status { width: 150px; }
+    .task-list { display: flex; flex-direction: column; gap: 10px; }
+    .task { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #fcfdff; }
+    .task.done { background: #f7faf8; opacity: .78; }
+    .task-top { display: grid; grid-template-columns: auto minmax(220px, 1fr) 150px 118px; gap: 10px; align-items: center; }
+    .task-title { width: 100%; border: 0; background: transparent; font-weight: 800; color: var(--text); padding: 7px 4px; outline: none; }
+    .task-title:focus { background: #fff; border-radius: 6px; box-shadow: 0 0 0 2px #d6e6ff; }
+    .task.done .task-title { text-decoration: line-through; color: #7d8795; }
+    .task-detail { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+    textarea { width: 100%; min-height: 82px; resize: vertical; line-height: 1.5; }
+    .field-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .task-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; }
+    .mini-actions { display: flex; gap: 8px; }
+    .icon-btn { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 7px 9px; font-size: 13px; }
+    .meta { font-size: 12px; color: var(--muted); }
+    .footer-note { text-align: center; color: var(--muted); font-size: 12px; padding: 18px 0 10px; line-height: 1.7; }
+    @media (max-width: 1000px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+    @media (max-width: 760px) {
+      .header { flex-direction: column; }
+      .actions { justify-content: flex-start; }
+      .save-state { text-align: left; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .module-head { flex-direction: column; }
+      .module-status { width: 100%; }
+      .task-top { grid-template-columns: auto 1fr; }
+      .task-top .status, .task-top .owner { grid-column: 2; width: 100%; }
+      .task-detail { grid-template-columns: 1fr; }
+      .task-footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div>
+        <h1>SND100 模拟前端设计管理面板</h1>
+        <p class="subtitle">按模块推进设计任务，记录设计决策、器件型号、原理图线索和 PCB 验证结果。数据保存在飞牛 Docker 挂载目录里，并会每天同步到 GitHub。</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="exportBtn" type="button">导出 JSON</button>
+        <label class="btn" for="importInput">导入 JSON</label>
+        <input id="importInput" type="file" accept="application/json,.json" hidden />
+        <button class="btn" id="reloadBtn" type="button">重新读取</button>
+        <button class="btn danger" id="resetBtn" type="button">恢复默认</button>
+        <button class="btn primary" id="addTaskBtn" type="button">新增任务</button>
+        <div class="save-state" id="saveState">正在读取服务器数据...</div>
+      </div>
+    </header>
+
+    <section class="summary-grid" aria-label="项目摘要">
+      <div class="summary-card">
+        <div class="label">总体进度</div>
+        <div class="value" id="progressText">0%</div>
+        <div class="progress-shell"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+      <div class="summary-card"><div class="label">已冻结模块</div><div class="value" id="frozenCount">0</div><div class="hint">状态为“已冻结”的模块数量</div></div>
+      <div class="summary-card"><div class="label">已完成任务</div><div class="value" id="doneCount">0</div><div class="hint" id="doneHint">共 0 项</div></div>
+      <div class="summary-card"><div class="label">当前阶段</div><div class="value" id="currentStage" style="font-size:22px">系统架构</div><div class="hint">根据首个未完成任务自动判断</div></div>
+    </section>
+
+    <section class="toolbar" aria-label="筛选工具">
+      <input id="searchInput" placeholder="搜索任务、设计说明、器件型号或验证记录" />
+      <select id="statusFilter" aria-label="任务状态筛选">
+        <option value="all">全部状态</option>
+        <option value="todo">未开始</option>
+        <option value="doing">设计中</option>
+        <option value="frozen">已冻结</option>
+      </select>
+      <select id="completionFilter" aria-label="完成状态筛选">
+        <option value="all">全部任务</option>
+        <option value="open">仅未完成</option>
+        <option value="done">仅已完成</option>
+      </select>
+    </section>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>模块导航</h2>
+        <div class="module-nav" id="moduleNav"></div>
+      </aside>
+      <main class="content" id="content"></main>
+    </div>
+    <div class="footer-note">填写后会自动保存到飞牛服务器；每日同步任务会把数据文件提交到 GitHub。导出 JSON 可作为额外备份。</div>
+  </div>
+
+  <script>
+    const API_URL = "/cgi-bin/data.sh";
+    const STORAGE_KEY = "snd100_design_dashboard_fallback";
+    const defaultData = [
+      ["architecture", "① 系统架构", "冻结整机拓扑、供电和四通道关系。", "doing", ["确定整体拓扑：固定 Boost + 低边恒流 + H 桥换向", "确定固定 Boost 电压", "确定单通道框图", "确定四通道结构"]],
+      ["reference", "② 精密参考源", "统一 ADC、DAC 的基准体系。", "todo", ["选择 Reference 芯片", "参考源输出滤波", "确认参考源驱动能力", "DAC/ADC Reference 分配"]],
+      ["dac", "③ DAC 电流设定", "生成四通道恒流设定值。", "doing", ["冻结 DAC 型号：SGM5348-12", "SPI 接口与上电状态", "DAC 输出 RC 滤波", "DAC 输出量程映射", "DAC 校准方案"]],
+      ["current", "④ 恒流控制模块", "当前优先级最高，先冻结核心闭环。", "doing", ["冻结低边恒流拓扑", "选择恒流运放", "选择线性 MOS", "确定 MOS 封装", "确定 Gate 串联电阻", "确定 Gate 下拉", "冻结 Rs：15Ω 0.1%", "设计环路补偿", "确定运放供电", "布局测试点"]],
+      ["hbridge", "⑤ H 桥换向", "负责双相刺激、断开和死区控制。", "todo", ["确定 P+N MOS 或全 N MOS 结构", "选择 H 桥 MOS", "确定高边驱动方式", "设计死区控制", "定义输出状态", "输出端默认安全状态"]],
+      ["adc", "⑥ 电流与电压采样", "采集实际电流、电极电压和合规余量。", "doing", ["冻结 ADC 型号：SGM5200", "Rs 电流采样 RC", "Electrode A 分压", "Electrode B 分压", "ADC 输入保护", "阻抗计算方案", "Compliance 检测", "采样同步策略"]],
+      ["protection", "⑦ 硬件保护", "不依赖 MCU 的快速故障关断。", "todo", ["硬件过流比较器", "过流阈值与迟滞", "输出过压保护", "短路保护", "开路检测", "ESD/浪涌保护", "故障锁存与复位"]],
+      ["boost", "⑧ 固定 Boost 电源", "暂不做自动压降调节，优先稳定和安全。", "todo", ["确定 Boost 输出电压", "选择 Boost 芯片", "设计软启动与 EN", "输出放电路径", "过压与过流保护", "EMI 与开关频率规划", "评估四通道最坏功耗"]],
+      ["mcu", "⑨ MCU 与接口", "定义控制、故障和调试接口。", "todo", ["SPI 资源分配", "H 桥控制 GPIO", "Fault 输入", "上电初始化顺序", "看门狗与异常关断", "调试接口与测试模式"]],
+      ["pcb", "⑩ PCB 与验证", "布局、热设计、测试和设计冻结。", "todo", ["模拟地与数字地规划", "四通道对称布局", "Reference / ADC / DAC 布局", "MOS 散热设计", "电极输出爬电距离", "测试点与跳线", "单通道验证", "四通道同时输出验证", "开短路与故障验证", "设计冻结记录"]]
+    ].map(([id, title, desc, status, tasks]) => ({
+      id, title, desc, status,
+      tasks: tasks.map((title, index) => ({ id: `${id}_${index}`, title, notes: "", part: "", result: "", owner: "", status: "todo", done: false, updated: new Date().toISOString() }))
+    }));
+
+    let data = clone(defaultData);
+    let saveTimer = null;
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      progressText: $("progressText"), progressBar: $("progressBar"), frozenCount: $("frozenCount"),
+      doneCount: $("doneCount"), doneHint: $("doneHint"), currentStage: $("currentStage"),
+      moduleNav: $("moduleNav"), content: $("content"), searchInput: $("searchInput"),
+      statusFilter: $("statusFilter"), completionFilter: $("completionFilter"), saveState: $("saveState")
+    };
+
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    function label(status) { return ({ todo: "未开始", doing: "设计中", frozen: "已冻结" })[status] || "未开始"; }
+    function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c])); }
+    function allTasks() { return data.flatMap((module) => module.tasks); }
+    function setState(text) { els.saveState.textContent = text; }
+
+    async function loadServerData() {
+      setState("正在读取服务器数据...");
+      try {
+        const response = await fetch(API_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error(`读取失败：HTTP ${response.status}`);
+        const payload = await response.json();
+        if (Array.isArray(payload.data)) data = payload.data;
+        else data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || clone(defaultData);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        setState(`已读取服务器数据 · ${new Date().toLocaleString()}`);
+      } catch (error) {
+        data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || clone(defaultData);
+        setState(`服务器暂不可用，正在使用浏览器备份 · ${error.message}`);
+      }
+      render();
+    }
+
+    async function saveServerData(message = "已保存到飞牛服务器") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      window.clearTimeout(saveTimer);
+      setState("正在保存...");
+      saveTimer = window.setTimeout(async () => {
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ app: "SND100 设计管理面板", updatedAt: new Date().toISOString(), data })
+          });
+          if (!response.ok) throw new Error(`保存失败：HTTP ${response.status}`);
+          setState(`${message} · ${new Date().toLocaleString()}`);
+        } catch (error) {
+          setState(`已保存到浏览器备份，服务器保存失败：${error.message}`);
+        }
+      }, 450);
+    }
+
+    function updateSummary() {
+      const tasks = allTasks();
+      const done = tasks.filter((task) => task.done).length;
+      const percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+      const stage = data.find((module) => module.tasks.some((task) => !task.done));
+      els.progressText.textContent = `${percent}%`;
+      els.progressBar.style.width = `${percent}%`;
+      els.doneCount.textContent = done;
+      els.doneHint.textContent = `共 ${tasks.length} 项`;
+      els.frozenCount.textContent = data.filter((module) => module.status === "frozen").length;
+      els.currentStage.textContent = stage ? stage.title.replace(/^[①-⑩]\s*/, "") : "全部完成";
+    }
+
+    function renderNav() {
+      els.moduleNav.innerHTML = "";
+      data.forEach((module) => {
+        const done = module.tasks.filter((task) => task.done).length;
+        const button = document.createElement("button");
+        button.className = "module-link";
+        button.type = "button";
+        button.innerHTML = `<strong>${escapeHtml(module.title)}</strong><span>${done}/${module.tasks.length} · ${label(module.status)}</span>`;
+        button.onclick = () => document.getElementById(`module_${module.id}`)?.scrollIntoView({ behavior: "smooth" });
+        els.moduleNav.appendChild(button);
+      });
+    }
+
+    function activeFilter() {
+      return els.searchInput.value.trim() || els.statusFilter.value !== "all" || els.completionFilter.value !== "all";
+    }
+
+    function matches(task, module) {
+      const query = els.searchInput.value.trim().toLowerCase();
+      const text = [task.title, task.notes, task.part, task.result, task.owner, module.title, module.desc].join(" ").toLowerCase();
+      if (query && !text.includes(query)) return false;
+      if (els.statusFilter.value !== "all" && task.status !== els.statusFilter.value) return false;
+      if (els.completionFilter.value === "open" && task.done) return false;
+      if (els.completionFilter.value === "done" && !task.done) return false;
+      return true;
+    }
+
+    function statusOptions(selected) {
+      return ["todo", "doing", "frozen"].map((status) => `<option value="${status}" ${selected === status ? "selected" : ""}>${label(status)}</option>`).join("");
+    }
+
+    function renderContent() {
+      els.content.innerHTML = "";
+      data.forEach((module, moduleIndex) => {
+        const visible = module.tasks.map((task, taskIndex) => ({ task, taskIndex })).filter(({ task }) => matches(task, module));
+        if (!visible.length && activeFilter()) return;
+        const card = document.createElement("section");
+        card.className = "module-card";
+        card.id = `module_${module.id}`;
+        card.innerHTML = `<div class="module-head"><div><h3>${escapeHtml(module.title)}</h3><p>${escapeHtml(module.desc)}</p></div><select class="status module-status" data-module-index="${moduleIndex}">${statusOptions(module.status)}</select></div><div class="task-list"></div><div style="margin-top:12px"><button class="btn add-module-task" type="button" data-module-index="${moduleIndex}">+ 添加本模块任务</button></div>`;
+        const list = card.querySelector(".task-list");
+        visible.forEach(({ task, taskIndex }) => list.appendChild(taskNode(moduleIndex, taskIndex, task)));
+        els.content.appendChild(card);
+      });
+    }
+
+    function taskNode(moduleIndex, taskIndex, task) {
+      const node = document.createElement("div");
+      node.className = `task${task.done ? " done" : ""}`;
+      node.innerHTML = `<div class="task-top"><input class="done-toggle" type="checkbox" ${task.done ? "checked" : ""} aria-label="完成"><input class="task-title" value="${escapeHtml(task.title)}" aria-label="任务名称"><select class="status task-status">${statusOptions(task.status)}</select><input class="owner" value="${escapeHtml(task.owner)}" placeholder="负责人" aria-label="负责人"></div><div class="task-detail"><div class="field-group"><label>设计说明 / 决策依据</label><textarea class="notes">${escapeHtml(task.notes)}</textarea></div><div class="field-group"><label>器件型号 / 原理图线索</label><textarea class="part">${escapeHtml(task.part)}</textarea></div><div class="field-group"><label>PCB 验证结果 / 问题记录</label><textarea class="result">${escapeHtml(task.result)}</textarea></div></div><div class="task-footer"><div class="meta">最后更新：<span class="updated">${new Date(task.updated).toLocaleString()}</span></div><div class="mini-actions"><button class="icon-btn duplicate" type="button">复制</button><button class="icon-btn delete" type="button">删除</button></div></div>`;
+      bindTask(node, moduleIndex, taskIndex);
+      return node;
+    }
+
+    function touch(moduleIndex, taskIndex, field, value) {
+      data[moduleIndex].tasks[taskIndex][field] = value;
+      data[moduleIndex].tasks[taskIndex].updated = new Date().toISOString();
+    }
+
+    function bindTask(node, moduleIndex, taskIndex) {
+      node.querySelector(".done-toggle").onchange = (event) => {
+        touch(moduleIndex, taskIndex, "done", event.target.checked);
+        if (event.target.checked && data[moduleIndex].tasks[taskIndex].status === "todo") data[moduleIndex].tasks[taskIndex].status = "frozen";
+        render();
+        saveServerData();
+      };
+      [["task-title", "title"], ["task-status", "status"], ["owner", "owner"], ["notes", "notes"], ["part", "part"], ["result", "result"]].forEach(([className, field]) => {
+        const input = node.querySelector(`.${className}`);
+        input.addEventListener(input.tagName === "SELECT" ? "change" : "input", (event) => {
+          touch(moduleIndex, taskIndex, field, event.target.value);
+          node.querySelector(".updated").textContent = new Date(data[moduleIndex].tasks[taskIndex].updated).toLocaleString();
+          updateSummary();
+          renderNav();
+          saveServerData();
+        });
+      });
+      node.querySelector(".delete").onclick = () => {
+        if (!confirm("确定删除这项任务吗？")) return;
+        data[moduleIndex].tasks.splice(taskIndex, 1);
+        render();
+        saveServerData("已删除并保存");
+      };
+      node.querySelector(".duplicate").onclick = () => {
+        const copy = clone(data[moduleIndex].tasks[taskIndex]);
+        copy.id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        copy.title += "（复制）";
+        copy.done = false;
+        copy.updated = new Date().toISOString();
+        data[moduleIndex].tasks.splice(taskIndex + 1, 0, copy);
+        render();
+        saveServerData("已复制并保存");
+      };
+    }
+
+    function addTask(moduleIndex = 0) {
+      const title = prompt("请输入任务名称：", "新增设计任务");
+      if (!title) return;
+      data[moduleIndex].tasks.push({ id: `${Date.now()}_${Math.random().toString(16).slice(2)}`, title, notes: "", part: "", result: "", owner: "", status: "todo", done: false, updated: new Date().toISOString() });
+      render();
+      saveServerData("已新增并保存");
+    }
+
+    function render() { updateSummary(); renderNav(); renderContent(); }
+    $("addTaskBtn").onclick = () => addTask(0);
+    $("reloadBtn").onclick = loadServerData;
+    $("resetBtn").onclick = () => { if (confirm("这会恢复默认任务模板，建议先导出 JSON。是否继续？")) { data = clone(defaultData); render(); saveServerData("已恢复默认并保存"); } };
+    $("exportBtn").onclick = () => {
+      const blob = new Blob([JSON.stringify({ app: "SND100 设计管理面板", exportedAt: new Date().toISOString(), data }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `SND100_dashboard_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+    $("importInput").onchange = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          const next = Array.isArray(imported) ? imported : imported.data;
+          if (!Array.isArray(next)) throw new Error("JSON 格式不正确");
+          data = next;
+          render();
+          saveServerData("已导入并保存");
+        } catch (error) {
+          alert(`导入失败：${error.message}`);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    };
+    els.searchInput.oninput = renderContent;
+    els.statusFilter.onchange = renderContent;
+    els.completionFilter.onchange = renderContent;
+    els.content.addEventListener("change", (event) => {
+      if (!event.target.classList.contains("module-status")) return;
+      data[Number(event.target.dataset.moduleIndex)].status = event.target.value;
+      updateSummary();
+      renderNav();
+      saveServerData();
+    });
+    els.content.addEventListener("click", (event) => {
+      if (event.target.classList.contains("add-module-task")) addTask(Number(event.target.dataset.moduleIndex));
+    });
+    loadServerData();
+  </script>
+</body>
+</html>

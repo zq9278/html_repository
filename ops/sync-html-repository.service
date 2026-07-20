@@ -1,0 +1,8 @@
+[Unit]
+Description=Sync Feiniu Docker websites and data to GitHub
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /usr/local/sbin/sync-html-repository.sh
