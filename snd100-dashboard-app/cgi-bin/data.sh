@@ -9,14 +9,12 @@ if [ "$REQUEST_METHOD" = "POST" ]; then
   else
     /busybox cat > "$DATA_FILE"
   fi
-  echo "Status: 204 No Content"
-  echo
+  /busybox printf "Status: 204 No Content\r\n\r\n"
   exit 0
 fi
 
-echo "Content-Type: application/json; charset=utf-8"
-echo "Cache-Control: no-store"
-echo
+/busybox printf "Content-Type: application/json; charset=utf-8\r\n"
+/busybox printf "Cache-Control: no-store\r\n\r\n"
 
 if [ -f "$DATA_FILE" ]; then
   /busybox cat "$DATA_FILE"

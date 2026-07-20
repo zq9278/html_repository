@@ -5,4 +5,5 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+TimeoutStartSec=10min
 ExecStart=/bin/sh /usr/local/sbin/sync-html-repository.sh
