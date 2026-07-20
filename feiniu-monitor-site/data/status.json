@@ -1,4 +1,4 @@
-{"generatedAt":"2026-07-20T09:15:07Z","generatedAtLocal":"2026-07-20 17:15:07 CST","dmzClient":"192.168.3.181","publicHost":"sanitlook.cn","siteCount":5,"host":{"hostname":"zq-nas","ips":"192.168.3.92 192.168.3.181 172.17.0.1 172.18.0.1 172.19.0.1 172.20.0.1 172.21.0.1 172.22.0.1 240e:390:bd:9220:a43b:e85:a50a:3 240e:390:bd:9220:ff65:e1e5:475c:7844 240e:390:bd:9220:62be:b4ff:fe0c:6874 240e:390:bd:9220:a43b:e85:a50a:4 240e:390:bd:9220:450b:d8c6:be1c:fdeb 240e:390:bd:9220:62be:b4ff:fe0c:6875","load":"0.35 0.22 0.15","uptime":"up 5 days, 3 hours, 25 minutes","dockerSize":"50M","dockerVersion":"Docker version 28.5.2"},"sync":{"timerActive":"active","timerEnabled":"enabled","lastResult":"exit-code","lastCommit":"7301978 Sync Feiniu Docker sites and data","nextRun":"Tue 2026-07-21 03:20:00 CST"},"containers":[{"name":"feiniu-monitor-site","image":"feiniu-monitor-site:latest","status":"Up 50 seconds","ports":[{"host":"18084","container":"80/tcp","public":true}]},{"name":"snd100-dashboard-app","image":"snd100-dashboard-app:latest","status":"Up 2 hours","ports":[{"host":"18083","container":"80/tcp","public":true}]},{"name":"snd100-linuokang-web","image":"snd100-linuokang-site:latest","status":"Up 3 days","ports":[{"host":"18082","container":"80/tcp","public":true}]},{"name":"www-sanitlook-web","image":"www-sanitlook-site:latest","status":"Up 3 days","ports":[{"host":"18081","container":"80/tcp","public":true}]},{"name":"snd-web","image":"snd-ui-prototype:latest","status":"Up 3 days","ports":[{"host":"18080","container":"80/tcp","public":true}]}],"sites":[{"name":"SND 原型页","port":18080,"path":"/vol1/docker/snd-site","httpStatus":200},{"name":"sanitlook 官网镜像","port":18081,"path":"/vol1/docker/www-sanitlook-site","httpStatus":200},{"name":"杭州立诺康 SND100 官网","port":18082,"path":"/vol1/docker/snd100-linuokang-site","httpStatus":200},{"name":"SND100 设计管理面板","port":18083,"path":"/vol1/docker/snd100-dashboard-app","httpStatus":200},{"name":"飞牛 Docker 实时监控","port":18084,"path":"/vol1/docker/feiniu-monitor-site","httpStatus":200}],"ports":[{"port":80,"process":"listen","public":true},{"port":443,"process":"listen","public":true},{"port":18080,"process":"listen","public":true},{"port":18081,"process":"listen","public":true},{"port":18082,"process":"listen","public":true},{"port":18083,"process":"listen","public":true},{"port":18084,"process":"listen","public":true}],"scripts":[{"name":"sync-html-repository.sh","path":"/usr/local/sbin/sync-html-repository.sh","size":1723,"modified":"2026-07-20 15:51:45 CST","mode":"755"},{"name":"collect-feiniu-monitor-status.sh","path":"/usr/local/sbin/collect-feiniu-monitor-status.sh","size":7437,"modified":"2026-07-20 17:12:31 CST","mode":"755"},{"name":"process-feiniu-monitor-actions.sh","path":"/usr/local/sbin/process-feiniu-monitor-actions.sh","size":5147,"modified":"2026-07-20 17:14:06 CST","mode":"755"},{"name":"renew-sanitlook-upnp.py","path":"/usr/local/sbin/renew-sanitlook-upnp.py","size":4934,"modified":"2026-07-20 15:42:32 CST","mode":"755"},{"name":"sync-html-repository.service","path":"/etc/systemd/system/sync-html-repository.service","size":241,"modified":"2026-07-20 15:07:43 CST","mode":"644"},{"name":"sync-html-repository.timer","path":"/etc/systemd/system/sync-html-repository.timer","size":166,"modified":"2026-07-20 15:03:33 CST","mode":"644"},{"name":"feiniu-monitor-status.service","path":"/etc/systemd/system/feiniu-monitor-status.service","size":168,"modified":"2026-07-20 15:51:45 CST","mode":"644"},{"name":"feiniu-monitor-status.timer","path":"/etc/systemd/system/feiniu-monitor-status.timer","size":198,"modified":"2026-07-20 15:51:45 CST","mode":"644"},{"name":"feiniu-monitor-actions.service","path":"/etc/systemd/system/feiniu-monitor-actions.service","size":169,"modified":"2026-07-20 15:51:45 CST","mode":"644"},{"name":"feiniu-monitor-actions.timer","path":"/etc/systemd/system/feiniu-monitor-actions.timer","size":201,"modified":"2026-07-20 15:51:45 CST","mode":"644"}],"actions":[
+{"generatedAt":"2026-07-20T10:04:47Z","generatedAtLocal":"2026-07-20 18:04:47 CST","dmzClient":"192.168.3.181","publicHost":"sanitlook.cn","siteCount":5,"host":{"hostname":"zq-nas","ips":"192.168.3.92 192.168.3.181 172.17.0.1 172.18.0.1 172.19.0.1 172.20.0.1 172.21.0.1 172.22.0.1 240e:390:bd:9220:a43b:e85:a50a:3 240e:390:bd:9220:ff65:e1e5:475c:7844 240e:390:bd:9220:62be:b4ff:fe0c:6874 240e:390:bd:9220:a43b:e85:a50a:4 240e:390:bd:9220:450b:d8c6:be1c:fdeb 240e:390:bd:9220:62be:b4ff:fe0c:6875","load":"0.06 0.15 0.15","uptime":"up 5 days, 4 hours, 15 minutes","dockerSize":"50M","dockerVersion":"Docker version 28.5.2"},"sync":{"timerActive":"active","timerEnabled":"enabled","lastResult":"exit-code","lastCommit":"7301978 Sync Feiniu Docker sites and data","nextRun":"Tue 2026-07-21 03:20:00 CST"},"containers":[{"name":"feiniu-monitor-site","image":"feiniu-monitor-site:latest","status":"Up 58 seconds","ports":[{"host":"18084","container":"80/tcp","public":true}]},{"name":"snd100-dashboard-app","image":"snd100-dashboard-app:latest","status":"Up 3 hours","ports":[{"host":"18083","container":"80/tcp","public":true}]},{"name":"snd100-linuokang-web","image":"snd100-linuokang-site:latest","status":"Up 3 days","ports":[{"host":"18082","container":"80/tcp","public":true}]},{"name":"www-sanitlook-web","image":"www-sanitlook-site:latest","status":"Up 3 days","ports":[{"host":"18081","container":"80/tcp","public":true}]},{"name":"snd-web","image":"snd-ui-prototype:latest","status":"Up 3 days","ports":[{"host":"18080","container":"80/tcp","public":true}]}],"sites":[{"name":"SND 原型页","port":18080,"path":"/vol1/docker/snd-site","httpStatus":200},{"name":"sanitlook 官网镜像","port":18081,"path":"/vol1/docker/www-sanitlook-site","httpStatus":200},{"name":"杭州立诺康 SND100 官网","port":18082,"path":"/vol1/docker/snd100-linuokang-site","httpStatus":200},{"name":"SND100 设计管理面板","port":18083,"path":"/vol1/docker/snd100-dashboard-app","httpStatus":200},{"name":"飞牛 Docker 实时监控","port":18084,"path":"/vol1/docker/feiniu-monitor-site","httpStatus":200}],"ports":[{"port":80,"process":"listen","public":true},{"port":443,"process":"listen","public":true},{"port":18080,"process":"listen","public":true},{"port":18081,"process":"listen","public":true},{"port":18082,"process":"listen","public":true},{"port":18083,"process":"listen","public":true},{"port":18084,"process":"listen","public":true}],"scripts":[{"name":"sync-html-repository.sh","path":"/usr/local/sbin/sync-html-repository.sh","size":1723,"modified":"2026-07-20 15:51:45 CST","mode":"755"},{"name":"collect-feiniu-monitor-status.sh","path":"/usr/local/sbin/collect-feiniu-monitor-status.sh","size":7452,"modified":"2026-07-20 18:03:38 CST","mode":"755"},{"name":"process-feiniu-monitor-actions.sh","path":"/usr/local/sbin/process-feiniu-monitor-actions.sh","size":5147,"modified":"2026-07-20 17:14:06 CST","mode":"755"},{"name":"renew-sanitlook-upnp.py","path":"/usr/local/sbin/renew-sanitlook-upnp.py","size":4934,"modified":"2026-07-20 15:42:32 CST","mode":"755"},{"name":"sync-html-repository.service","path":"/etc/systemd/system/sync-html-repository.service","size":241,"modified":"2026-07-20 15:07:43 CST","mode":"644"},{"name":"sync-html-repository.timer","path":"/etc/systemd/system/sync-html-repository.timer","size":166,"modified":"2026-07-20 15:03:33 CST","mode":"644"},{"name":"feiniu-monitor-status.service","path":"/etc/systemd/system/feiniu-monitor-status.service","size":168,"modified":"2026-07-20 15:51:45 CST","mode":"644"},{"name":"feiniu-monitor-status.timer","path":"/etc/systemd/system/feiniu-monitor-status.timer","size":198,"modified":"2026-07-20 15:51:45 CST","mode":"644"},{"name":"feiniu-monitor-actions.service","path":"/etc/systemd/system/feiniu-monitor-actions.service","size":169,"modified":"2026-07-20 15:51:45 CST","mode":"644"},{"name":"feiniu-monitor-actions.timer","path":"/etc/systemd/system/feiniu-monitor-actions.timer","size":201,"modified":"2026-07-20 15:51:45 CST","mode":"644"}],"actions":[
   {
     "time": "2026-07-20 15:55:36",
     "file": "request-1784534134-103.json",
@@ -58,6 +58,33 @@
     "name": "保存网站文件夹",
     "folderCount": 5,
     "assignmentCount": 2
+  },
+  {
+    "time": "2026-07-20 18:01:13",
+    "file": "request-1784541662-375.json",
+    "ok": true,
+    "action": "save_folders",
+    "name": "保存网站文件夹",
+    "folderCount": 5,
+    "assignmentCount": 2
+  },
+  {
+    "time": "2026-07-20 18:04:11",
+    "file": "request-1784541840-10.json",
+    "ok": true,
+    "action": "save_folders",
+    "name": "保存网站文件夹",
+    "folderCount": 6,
+    "assignmentCount": 2
+  },
+  {
+    "time": "2026-07-20 18:04:35",
+    "file": "request-1784541866-28.json",
+    "ok": true,
+    "action": "save_folders",
+    "name": "保存网站文件夹",
+    "folderCount": 6,
+    "assignmentCount": 2
   }
 ],"folderConfig":{
   "folders": [
@@ -65,7 +92,8 @@
     "管理工具",
     "系统入口",
     "其他网站",
-    "设计工具"
+    "设计工具",
+    "测试空文件夹"
   ],
   "assignments": {
     "18083": "设计工具",

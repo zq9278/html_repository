@@ -251,6 +251,10 @@
     details.folder[open] {
       background: var(--surface);
     }
+    details.folder.empty-folder {
+      border-style: dashed;
+      background: #fbfcfe;
+    }
     .folder summary {
       cursor: pointer;
       list-style: none;
@@ -466,6 +470,7 @@
         return;
       }
       const groups = new Map();
+      folderState.folders.forEach((name) => groups.set(name, []));
       sites.forEach((site) => {
         const name = siteGroup(site);
         if (!groups.has(name)) groups.set(name, []);
@@ -474,7 +479,7 @@
       const folders = [...groups.entries()].sort((a, b) => folderOrder(a[0]) - folderOrder(b[0]));
       $("siteFolders").innerHTML = folders.map(([name, items], index) => {
         const healthy = items.filter((item) => item.httpStatus === 200).length;
-        const body = items.sort((a, b) => Number(a.port) - Number(b.port)).map((item) => {
+        const body = items.length ? items.sort((a, b) => Number(a.port) - Number(b.port)).map((item) => {
           const kind = item.httpStatus === 200 ? "good" : "bad";
           const url = `http://${publicHost}:${item.port}/`;
           const canDelete = Number(item.port) !== 18084;
@@ -482,8 +487,8 @@
             ? `<button class="action-btn danger" type="button" data-delete-port="${esc(item.port)}" data-delete-name="${esc(item.name)}">删除</button>`
             : `<button class="action-btn" type="button" disabled>保留</button>`;
           return `<div class="site-item"><div class="site-main"><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></div><div>${tag(item.port, "warn")}</div><div>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</div><div><select class="folder-select" data-move-port="${esc(item.port)}">${folderOptions(siteGroup(item))}</select></div><div><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a> ${button}</div></div>`;
-        }).join("");
-        return `<details class="folder" ${index === 0 ? "open" : ""}><summary><span class="folder-title"><span class="folder-icon"></span>${esc(name)}</span><span class="small">${items.length} 个 · ${healthy} 正常</span></summary>${body}</details>`;
+        }).join("") : '<div class="empty">这个文件夹还没有网站，可以用“移动到”把网站放进来。</div>';
+        return `<details class="folder ${items.length ? "" : "empty-folder"}" ${index === 0 || items.length === 0 ? "open" : ""}><summary><span class="folder-title"><span class="folder-icon"></span>${esc(name)}</span><span class="small">${items.length} 个 · ${healthy} 正常</span></summary>${body}</details>`;
       }).join("");
     }
 

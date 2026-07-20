@@ -3,7 +3,7 @@ set -eu
 
 OUT_DIR="/vol1/docker/feiniu-monitor-site/data"
 OUT_FILE="$OUT_DIR/status.json"
-TMP_FILE="$OUT_FILE.tmp"
+TMP_FILE="$OUT_FILE.$$.$(date +%s).tmp"
 PUBLIC_HOST="sanitlook.cn"
 DMZ_CLIENT="192.168.3.181"
 
