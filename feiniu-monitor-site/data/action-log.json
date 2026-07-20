@@ -1,0 +1,18 @@
+[
+  {
+    "time": "2026-07-20 15:55:36",
+    "file": "request-1784534134-103.json",
+    "ok": false,
+    "action": "delete_site",
+    "port": 18084,
+    "error": "此站点不允许在网页中删除"
+  },
+  {
+    "time": "2026-07-20 15:55:36",
+    "file": "request-1784534134-90.json",
+    "ok": false,
+    "action": "delete_site",
+    "port": 18080,
+    "error": "密码错误"
+  }
+]
