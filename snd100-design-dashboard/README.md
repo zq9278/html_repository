@@ -5,7 +5,7 @@ SND100 模拟前端设计管理面板。
 Public entry:
 
 ```text
-https://zq9278.github.io/html_repository/snd100-design-dashboard/
+https://raw.githack.com/zq9278/html_repository/main/snd100-design-dashboard/index.html
 ```
 
 ## Data Persistence
