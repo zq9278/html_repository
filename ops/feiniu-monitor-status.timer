@@ -1,0 +1,11 @@
+[Unit]
+Description=Collect Feiniu Docker monitor status every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=feiniu-monitor-status.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>飞牛 Docker 实时监控</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-2: #eef3f8;
+      --text: #172033;
+      --muted: #637083;
+      --line: #d9e1eb;
+      --good: #0f9f6e;
+      --warn: #c47a00;
+      --bad: #d04444;
+      --accent: #176b87;
+      --shadow: 0 16px 40px rgba(23, 32, 51, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+    header {
+      padding: 22px 26px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 3;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 760;
+    }
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .status-pill {
+      min-width: 170px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 12px;
+      background: var(--surface-2);
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+    .dot.ok { background: var(--good); }
+    .dot.bad { background: var(--bad); }
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 22px 26px 34px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .metric, .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .metric { padding: 15px; }
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .metric .value {
+      font-size: 25px;
+      font-weight: 760;
+      line-height: 1;
+    }
+    .metric .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      min-height: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(360px, .75fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .panel { overflow: hidden; }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 15px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+    h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #fbfcfe;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .tag.good { color: #086246; background: #e8f7f1; border-color: #b9ead6; }
+    .tag.bad { color: #9d2828; background: #fff0f0; border-color: #f2c2c2; }
+    .tag.warn { color: #875200; background: #fff6df; border-color: #ead196; }
+    .link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 650;
+    }
+    .link:hover { text-decoration: underline; }
+    .stack {
+      display: grid;
+      gap: 16px;
+    }
+    .list {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      font-size: 13px;
+    }
+    .row .key { color: var(--muted); }
+    .mono {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    .ports {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .empty {
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 980px) {
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .status-pill { width: 100%; justify-content: flex-start; }
+    }
+    @media (max-width: 560px) {
+      header, main { padding-left: 14px; padding-right: 14px; }
+      .summary { grid-template-columns: 1fr; }
+      th:nth-child(3), td:nth-child(3) { display: none; }
+      .row { grid-template-columns: 1fr; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div>
+        <h1>飞牛 Docker 实时监控</h1>
+        <p class="subtitle">192.168.3.181 已设为 DMZ，监听端口会直接暴露到公网；本页只读展示，每分钟采集一次。</p>
+      </div>
+      <div class="status-pill"><span class="dot" id="liveDot"></span><span id="liveText">等待数据...</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="summary" aria-label="摘要">
+      <div class="metric"><div class="label">Docker 容器</div><div class="value" id="containerCount">-</div><div class="hint" id="runningHint">-</div></div>
+      <div class="metric"><div class="label">网站目录</div><div class="value" id="siteCount">-</div><div class="hint">含 index.html 或 compose</div></div>
+      <div class="metric"><div class="label">暴露端口</div><div class="value" id="portCount">-</div><div class="hint">DMZ 下公网可探测</div></div>
+      <div class="metric"><div class="label">健康站点</div><div class="value" id="healthyCount">-</div><div class="hint" id="healthHint">-</div></div>
+      <div class="metric"><div class="label">Docker 目录</div><div class="value" id="dockerSize">-</div><div class="hint">/vol1/docker</div></div>
+    </section>
+
+    <section class="grid">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-head"><h2>容器与端口</h2><span class="small" id="containerUpdated">-</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>容器</th><th>状态</th><th>镜像</th><th>端口</th></tr></thead>
+              <tbody id="containerRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>网站健康检查</h2><span class="small">本机访问 127.0.0.1</span></div>
+          <table>
+            <thead><tr><th>站点</th><th>端口</th><th>状态</th><th>入口</th></tr></thead>
+            <tbody id="siteRows"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <aside class="stack">
+        <section class="panel">
+          <div class="panel-head"><h2>主机状态</h2><span class="small" id="hostName">-</span></div>
+          <div class="list" id="hostRows"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>监听端口</h2><span class="small">80/443/18080-18120</span></div>
+          <div class="list"><div class="ports" id="portTags"></div></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>同步状态</h2><span class="small">GitHub 备份</span></div>
+          <div class="list" id="syncRows"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const jsonUrl = "data/status.json";
+    const publicHost = location.hostname || "sanitlook.cn";
+    const $ = (id) => document.getElementById(id);
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function tag(text, kind = "") {
+      return `<span class="tag ${kind}">${esc(text)}</span>`;
+    }
+
+    function statusKind(text) {
+      if (/Up|running|active|success|200/.test(text)) return "good";
+      if (/Exited|failed|error|unhealthy|timeout/i.test(text)) return "bad";
+      return "warn";
+    }
+
+    function setRows(id, rows) {
+      $(id).innerHTML = rows.length ? rows.join("") : `<tr><td colspan="4"><div class="empty">暂无数据</div></td></tr>`;
+    }
+
+    function render(data) {
+      const containers = data.containers || [];
+      const sites = data.sites || [];
+      const ports = data.ports || [];
+      const running = containers.filter((item) => /^Up/.test(item.status || "")).length;
+      const healthy = sites.filter((item) => item.httpStatus === 200).length;
+
+      $("containerCount").textContent = containers.length;
+      $("runningHint").textContent = `${running} 个运行中`;
+      $("siteCount").textContent = data.siteCount ?? sites.length;
+      $("portCount").textContent = ports.length;
+      $("healthyCount").textContent = healthy;
+      $("healthHint").textContent = `${sites.length} 个检查项`;
+      $("dockerSize").textContent = data.host?.dockerSize || "-";
+      $("hostName").textContent = data.host?.hostname || "-";
+      $("containerUpdated").textContent = data.generatedAtLocal || data.generatedAt || "-";
+
+      setRows("containerRows", containers.map((item) => {
+        const portsHtml = (item.ports || []).map((p) => tag(p.public ? `${p.host}->${p.container}` : `${p.host}`, p.public ? "warn" : "")).join(" ");
+        return `<tr><td><strong>${esc(item.name)}</strong></td><td>${tag(item.status, statusKind(item.status))}</td><td class="mono">${esc(item.image)}</td><td>${portsHtml || '<span class="small">无</span>'}</td></tr>`;
+      }));
+
+      setRows("siteRows", sites.map((item) => {
+        const kind = item.httpStatus === 200 ? "good" : "bad";
+        const url = `http://${publicHost}:${item.port}/`;
+        return `<tr><td><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></td><td>${tag(item.port, "warn")}</td><td>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</td><td><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a></td></tr>`;
+      }));
+
+      $("portTags").innerHTML = ports.length ? ports.map((p) => tag(`${p.port} ${p.process || ""}`, p.public ? "warn" : "")).join("") : '<div class="empty">暂无监听端口</div>';
+
+      const hostRows = [
+        ["内网地址", data.host?.ips || "-"],
+        ["系统负载", data.host?.load || "-"],
+        ["运行时间", data.host?.uptime || "-"],
+        ["Docker 版本", data.host?.dockerVersion || "-"],
+      ];
+      $("hostRows").innerHTML = hostRows.map(([k, v]) => `<div class="row"><div class="key">${esc(k)}</div><div class="mono">${esc(v)}</div></div>`).join("");
+
+      const sync = data.sync || {};
+      const syncRows = [
+        ["定时器", `${sync.timerActive || "-"} / ${sync.timerEnabled || "-"}`],
+        ["上次结果", sync.lastResult || "-"],
+        ["最近提交", sync.lastCommit || "-"],
+        ["下次运行", sync.nextRun || "-"],
+      ];
+      $("syncRows").innerHTML = syncRows.map(([k, v]) => `<div class="row"><div class="key">${esc(k)}</div><div class="mono">${esc(v)}</div></div>`).join("");
+
+      $("liveDot").className = "dot ok";
+      $("liveText").textContent = `已更新 ${data.generatedAtLocal || ""}`;
+    }
+
+    async function load() {
+      try {
+        const response = await fetch(`${jsonUrl}?t=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        render(await response.json());
+      } catch (error) {
+        $("liveDot").className = "dot bad";
+        $("liveText").textContent = `读取失败：${error.message}`;
+      }
+    }
+
+    load();
+    setInterval(load, 15000);
+  </script>
+</body>
+</html>

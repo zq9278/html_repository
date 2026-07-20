@@ -1,0 +1,10 @@
+services:
+  monitor:
+    build: .
+    image: feiniu-monitor-site:latest
+    container_name: feiniu-monitor-site
+    restart: unless-stopped
+    ports:
+      - "18084:80"
+    volumes:
+      - ./data:/www/data:ro

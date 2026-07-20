@@ -16,6 +16,7 @@ DESCRIPTIONS = {
     18081: "www-sanitlook-site",
     18082: "snd100-linuokang-site",
     18083: "snd100-dashboard-app",
+    18084: "feiniu-monitor-site",
 }
 
 

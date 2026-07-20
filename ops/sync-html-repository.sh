@@ -54,10 +54,11 @@ copy_site "/vol1/docker/snd-site" "$REPO_DIR/snd-site"
 copy_site "/vol1/docker/www-sanitlook-site" "$REPO_DIR/www-sanitlook-site"
 copy_site "/vol1/docker/snd100-linuokang-site" "$REPO_DIR/snd100-linuokang-site"
 copy_site "/vol1/docker/snd100-dashboard-app" "$REPO_DIR/snd100-dashboard-app"
+copy_site "/vol1/docker/feiniu-monitor-site" "$REPO_DIR/feiniu-monitor-site"
 
 git config user.name "zq-nas"
 git config user.email "zq9278@gmail.com"
-git add snd-site www-sanitlook-site snd100-linuokang-site snd100-dashboard-app
+git add snd-site www-sanitlook-site snd100-linuokang-site snd100-dashboard-app feiniu-monitor-site
 
 if git diff --cached --quiet; then
   echo "No changes to sync."
