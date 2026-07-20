@@ -1,0 +1,11 @@
+[Unit]
+Description=Process Feiniu monitor admin actions every 10 seconds
+
+[Timer]
+OnBootSec=40s
+OnUnitActiveSec=10s
+AccuracySec=2s
+Unit=feiniu-monitor-actions.service
+
+[Install]
+WantedBy=timers.target

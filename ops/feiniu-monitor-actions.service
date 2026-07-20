@@ -1,0 +1,7 @@
+[Unit]
+Description=Process Feiniu monitor admin actions
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /usr/local/sbin/process-feiniu-monitor-actions.sh

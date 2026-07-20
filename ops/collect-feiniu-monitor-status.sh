@@ -107,6 +107,43 @@ timer_field() {
   systemctl "$1" "$2" 2>/dev/null || printf 'unknown'
 }
 
+emit_scripts() {
+  first=1
+  for path in \
+    /usr/local/sbin/sync-html-repository.sh \
+    /usr/local/sbin/collect-feiniu-monitor-status.sh \
+    /usr/local/sbin/process-feiniu-monitor-actions.sh \
+    /usr/local/sbin/renew-sanitlook-upnp.py \
+    /etc/systemd/system/sync-html-repository.service \
+    /etc/systemd/system/sync-html-repository.timer \
+    /etc/systemd/system/feiniu-monitor-status.service \
+    /etc/systemd/system/feiniu-monitor-status.timer \
+    /etc/systemd/system/feiniu-monitor-actions.service \
+    /etc/systemd/system/feiniu-monitor-actions.timer; do
+    [ -e "$path" ] || continue
+    [ "$first" = 1 ] || printf ','
+    first=0
+    name="$(basename "$path")"
+    size="$(wc -c < "$path" | xargs)"
+    modified="$(date -r "$path" '+%Y-%m-%d %H:%M:%S %Z' 2>/dev/null || true)"
+    mode="$(stat -c '%a' "$path" 2>/dev/null || true)"
+    printf '{"name":"%s","path":"%s","size":%s,"modified":"%s","mode":"%s"}' \
+      "$(printf '%s' "$name" | json_escape)" \
+      "$(printf '%s' "$path" | json_escape)" \
+      "$size" \
+      "$(printf '%s' "$modified" | json_escape)" \
+      "$(printf '%s' "$mode" | json_escape)"
+  done
+}
+
+emit_action_log() {
+  if [ -f "$OUT_DIR/action-log.json" ]; then
+    cat "$OUT_DIR/action-log.json"
+  else
+    printf '[]'
+  fi
+}
+
 generated_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 generated_local="$(date '+%Y-%m-%d %H:%M:%S %Z')"
 hostname="$(hostname)"
@@ -148,7 +185,11 @@ next_run="$(systemctl list-timers sync-html-repository.timer --no-pager 2>/dev/n
   emit_sites
   printf '],"ports":['
   emit_ports
-  printf ']}'
+  printf '],"scripts":['
+  emit_scripts
+  printf '],"actions":'
+  emit_action_log
+  printf '}'
 } > "$TMP_FILE"
 
 mv "$TMP_FILE" "$OUT_FILE"

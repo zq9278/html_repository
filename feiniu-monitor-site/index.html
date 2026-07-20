@@ -173,6 +173,26 @@
       font-weight: 650;
     }
     .link:hover { text-decoration: underline; }
+    .action-btn {
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--text);
+      min-height: 28px;
+      padding: 4px 9px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .action-btn.danger {
+      border-color: #efb7b7;
+      background: #fff2f2;
+      color: #a12424;
+    }
+    .action-btn:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+    }
     .stack {
       display: grid;
       gap: 16px;
@@ -225,7 +245,7 @@
     <div class="topbar">
       <div>
         <h1>飞牛 Docker 实时监控</h1>
-        <p class="subtitle">192.168.3.181 已设为 DMZ，监听端口会直接暴露到公网；本页只读展示，每分钟采集一次。</p>
+        <p class="subtitle">192.168.3.181 已设为 DMZ，监听端口会直接暴露到公网；状态每分钟采集一次，删除操作需要管理密码。</p>
       </div>
       <div class="status-pill"><span class="dot" id="liveDot"></span><span id="liveText">等待数据...</span></div>
     </div>
@@ -255,7 +275,7 @@
         <section class="panel">
           <div class="panel-head"><h2>网站健康检查</h2><span class="small">本机访问 127.0.0.1</span></div>
           <table>
-            <thead><tr><th>站点</th><th>端口</th><th>状态</th><th>入口</th></tr></thead>
+            <thead><tr><th>站点</th><th>端口</th><th>状态</th><th>入口</th><th>操作</th></tr></thead>
             <tbody id="siteRows"></tbody>
           </table>
         </section>
@@ -275,6 +295,16 @@
         <section class="panel">
           <div class="panel-head"><h2>同步状态</h2><span class="small">GitHub 备份</span></div>
           <div class="list" id="syncRows"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>运维脚本</h2><span class="small" id="scriptCount">-</span></div>
+          <div class="list" id="scriptRows"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>删除记录</h2><span class="small">最近 80 条</span></div>
+          <div class="list" id="actionRows"></div>
         </section>
       </aside>
     </section>
@@ -300,13 +330,15 @@
     }
 
     function setRows(id, rows) {
-      $(id).innerHTML = rows.length ? rows.join("") : `<tr><td colspan="4"><div class="empty">暂无数据</div></td></tr>`;
+      $(id).innerHTML = rows.length ? rows.join("") : `<tr><td colspan="5"><div class="empty">暂无数据</div></td></tr>`;
     }
 
     function render(data) {
       const containers = data.containers || [];
       const sites = data.sites || [];
       const ports = data.ports || [];
+      const scripts = data.scripts || [];
+      const actions = data.actions || [];
       const running = containers.filter((item) => /^Up/.test(item.status || "")).length;
       const healthy = sites.filter((item) => item.httpStatus === 200).length;
 
@@ -328,7 +360,11 @@
       setRows("siteRows", sites.map((item) => {
         const kind = item.httpStatus === 200 ? "good" : "bad";
         const url = `http://${publicHost}:${item.port}/`;
-        return `<tr><td><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></td><td>${tag(item.port, "warn")}</td><td>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</td><td><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a></td></tr>`;
+        const canDelete = Number(item.port) !== 18084;
+        const button = canDelete
+          ? `<button class="action-btn danger" type="button" data-delete-port="${esc(item.port)}" data-delete-name="${esc(item.name)}">删除</button>`
+          : `<button class="action-btn" type="button" disabled>保留</button>`;
+        return `<tr><td><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></td><td>${tag(item.port, "warn")}</td><td>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</td><td><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a></td><td>${button}</td></tr>`;
       }));
 
       $("portTags").innerHTML = ports.length ? ports.map((p) => tag(`${p.port} ${p.process || ""}`, p.public ? "warn" : "")).join("") : '<div class="empty">暂无监听端口</div>';
@@ -350,6 +386,19 @@
       ];
       $("syncRows").innerHTML = syncRows.map(([k, v]) => `<div class="row"><div class="key">${esc(k)}</div><div class="mono">${esc(v)}</div></div>`).join("");
 
+      $("scriptCount").textContent = `${scripts.length} 个`;
+      $("scriptRows").innerHTML = scripts.length
+        ? scripts.map((item) => `<div class="row"><div class="key">${esc(item.name)}</div><div><div class="mono">${esc(item.path)}</div><div class="small">${esc(item.modified)} · ${esc(item.size)} bytes · ${esc(item.mode)}</div></div></div>`).join("")
+        : '<div class="empty">暂无脚本统计</div>';
+
+      $("actionRows").innerHTML = actions.length
+        ? actions.slice(-8).reverse().map((item) => `<div class="row"><div class="key">${tag(item.ok ? "成功" : "失败", item.ok ? "good" : "bad")}</div><div><div class="mono">${esc(item.time || "-")} · ${esc(item.name || item.port || "-")}</div><div class="small">${esc(item.error || item.backupPath || item.action || "")}</div></div></div>`).join("")
+        : '<div class="empty">暂无删除记录</div>';
+
+      document.querySelectorAll("[data-delete-port]").forEach((button) => {
+        button.onclick = () => deleteSite(button.dataset.deletePort, button.dataset.deleteName);
+      });
+
       $("liveDot").className = "dot ok";
       $("liveText").textContent = `已更新 ${data.generatedAtLocal || ""}`;
     }
@@ -362,6 +411,28 @@
       } catch (error) {
         $("liveDot").className = "dot bad";
         $("liveText").textContent = `读取失败：${error.message}`;
+      }
+    }
+
+    async function deleteSite(port, name) {
+      const confirmText = `确认删除 ${name}（端口 ${port}）吗？容器会停止，目录会移动到 /vol1/docker/_deleted-sites。`;
+      if (!confirm(confirmText)) return;
+      const password = prompt("请输入监控管理密码：");
+      if (!password) return;
+      try {
+        const response = await fetch("cgi-bin/action.sh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "delete_site", port: Number(port), password })
+        });
+        const result = await response.json();
+        if (!result.ok) throw new Error(result.error || "提交失败");
+        $("liveDot").className = "dot ok";
+        $("liveText").textContent = "删除请求已提交，等待主机处理...";
+        setTimeout(load, 3000);
+      } catch (error) {
+        $("liveDot").className = "dot bad";
+        $("liveText").textContent = `删除请求失败：${error.message}`;
       }
     }
 

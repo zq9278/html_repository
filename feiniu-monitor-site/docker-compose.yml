@@ -7,4 +7,4 @@ services:
     ports:
       - "18084:80"
     volumes:
-      - ./data:/www/data:ro
+      - ./data:/www/data

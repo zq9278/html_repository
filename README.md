@@ -24,3 +24,5 @@ The Feiniu OS host is fixed at `192.168.3.181`. Docker websites currently use se
 | `18082` | SND100 Linuokang Product Website |
 | `18083` | SND100 Dashboard App |
 | `18084` | Feiniu Docker Monitor |
+
+The Feiniu Docker Monitor shows runtime scripts and supports password-protected delete requests. The password is stored only on the Feiniu host at `/root/.config/feiniu_monitor_admin_password`; it is not committed to this repository.
