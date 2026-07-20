@@ -23,4 +23,4 @@ The admin password is stored only on the Feiniu host:
 
 Delete requests stop the Docker container and move the site folder into `/vol1/docker/_deleted-sites`. The monitor site on port `18084` is protected and cannot delete itself from the web UI.
 
-The website list is grouped like folders. Current default groups are business websites, management tools, system entries, and other websites.
+The website list is grouped like folders. Current default groups are business websites, management tools, system entries, and other websites. Users can create folders and move sites between folders from the monitor UI; changes are stored in `/vol1/docker/feiniu-monitor-site/data/site-folders.json`.

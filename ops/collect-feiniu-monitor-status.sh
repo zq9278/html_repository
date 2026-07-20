@@ -144,6 +144,14 @@ emit_action_log() {
   fi
 }
 
+emit_folder_config() {
+  if [ -f "$OUT_DIR/site-folders.json" ]; then
+    cat "$OUT_DIR/site-folders.json"
+  else
+    printf '{"folders":["业务网站","管理工具","系统入口","其他网站"],"assignments":{}}'
+  fi
+}
+
 generated_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 generated_local="$(date '+%Y-%m-%d %H:%M:%S %Z')"
 hostname="$(hostname)"
@@ -189,6 +197,8 @@ next_run="$(systemctl list-timers sync-html-repository.timer --no-pager 2>/dev/n
   emit_scripts
   printf '],"actions":'
   emit_action_log
+  printf ',"folderConfig":'
+  emit_folder_config
   printf '}'
 } > "$TMP_FILE"
 

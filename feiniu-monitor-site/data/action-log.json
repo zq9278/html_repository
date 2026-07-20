@@ -14,5 +14,49 @@
     "action": "delete_site",
     "port": 18080,
     "error": "密码错误"
+  },
+  {
+    "time": "2026-07-20 16:13:56",
+    "file": "request-1784535233-13.json",
+    "ok": false,
+    "action": "delete_site",
+    "port": 18084,
+    "error": "此站点不允许在网页中删除"
+  },
+  {
+    "time": "2026-07-20 17:12:56",
+    "file": "request-1784538771-9.json",
+    "ok": true,
+    "action": "save_folders",
+    "name": "保存网站文件夹",
+    "folderCount": 5,
+    "assignmentCount": 2
+  },
+  {
+    "time": "2026-07-20 17:13:30",
+    "file": "request-1784538799-28.json",
+    "ok": true,
+    "action": "save_folders",
+    "name": "保存网站文件夹",
+    "folderCount": 5,
+    "assignmentCount": 2
+  },
+  {
+    "time": "2026-07-20 17:14:25",
+    "file": "request-1784538864-8.json",
+    "ok": true,
+    "action": "save_folders",
+    "name": "保存网站文件夹",
+    "folderCount": 5,
+    "assignmentCount": 2
+  },
+  {
+    "time": "2026-07-20 17:14:56",
+    "file": "request-1784538893-26.json",
+    "ok": true,
+    "action": "save_folders",
+    "name": "保存网站文件夹",
+    "folderCount": 5,
+    "assignmentCount": 2
   }
 ]

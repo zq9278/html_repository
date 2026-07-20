@@ -193,6 +193,23 @@
       cursor: not-allowed;
       opacity: .45;
     }
+    .panel-actions {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .folder-select {
+      min-height: 28px;
+      max-width: 160px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: 12px;
+      padding: 4px 8px;
+    }
     .stack {
       display: grid;
       gap: 16px;
@@ -274,7 +291,7 @@
     }
     .site-item {
       display: grid;
-      grid-template-columns: minmax(180px, 1fr) auto auto auto;
+      grid-template-columns: minmax(180px, 1fr) auto auto auto auto;
       gap: 10px;
       align-items: center;
       padding: 11px 13px;
@@ -343,7 +360,13 @@
         </section>
 
         <section class="panel">
-          <div class="panel-head"><h2>网站文件夹</h2><span class="small">本机访问 127.0.0.1</span></div>
+          <div class="panel-head">
+            <h2>网站文件夹</h2>
+            <div class="panel-actions">
+              <button class="action-btn" id="addFolderBtn" type="button">新建文件夹</button>
+              <button class="action-btn" id="saveFoldersBtn" type="button">保存文件夹</button>
+            </div>
+          </div>
           <div class="folder-list" id="siteFolders"></div>
         </section>
       </div>
@@ -380,6 +403,8 @@
   <script>
     const jsonUrl = "data/status.json";
     const publicHost = location.hostname || "sanitlook.cn";
+    let folderState = { folders: ["业务网站", "管理工具", "系统入口", "其他网站"], assignments: {} };
+    let lastSites = [];
     const $ = (id) => document.getElementById(id);
 
     function esc(value) {
@@ -400,7 +425,7 @@
       $(id).innerHTML = rows.length ? rows.join("") : `<tr><td colspan="5"><div class="empty">暂无数据</div></td></tr>`;
     }
 
-    function siteGroup(item) {
+    function defaultSiteGroup(item) {
       const port = Number(item.port);
       if (port === 18084 || /监控|Monitor/i.test(item.name || "")) return "管理工具";
       if (port === 18080 || port === 18081 || port === 18082 || port === 18083) return "业务网站";
@@ -410,6 +435,29 @@
 
     function folderOrder(name) {
       return ({ "业务网站": 1, "管理工具": 2, "系统入口": 3, "其他网站": 4 })[name] || 9;
+    }
+
+    function normalizeFolderState(config = {}) {
+      const defaults = ["业务网站", "管理工具", "系统入口", "其他网站"];
+      const folders = [];
+      [...(config.folders || []), ...defaults].forEach((item) => {
+        const name = String(item || "").trim();
+        if (name && !folders.includes(name)) folders.push(name);
+      });
+      const assignments = {};
+      Object.entries(config.assignments || {}).forEach(([port, folder]) => {
+        const name = String(folder || "").trim();
+        if (folders.includes(name)) assignments[String(Number(port))] = name;
+      });
+      return { folders, assignments };
+    }
+
+    function siteGroup(item) {
+      return folderState.assignments[String(item.port)] || defaultSiteGroup(item);
+    }
+
+    function folderOptions(selected) {
+      return folderState.folders.map((name) => `<option value="${esc(name)}" ${name === selected ? "selected" : ""}>${esc(name)}</option>`).join("");
     }
 
     function renderSiteFolders(sites) {
@@ -433,7 +481,7 @@
           const button = canDelete
             ? `<button class="action-btn danger" type="button" data-delete-port="${esc(item.port)}" data-delete-name="${esc(item.name)}">删除</button>`
             : `<button class="action-btn" type="button" disabled>保留</button>`;
-          return `<div class="site-item"><div class="site-main"><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></div><div>${tag(item.port, "warn")}</div><div>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</div><div><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a> ${button}</div></div>`;
+          return `<div class="site-item"><div class="site-main"><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></div><div>${tag(item.port, "warn")}</div><div>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</div><div><select class="folder-select" data-move-port="${esc(item.port)}">${folderOptions(siteGroup(item))}</select></div><div><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a> ${button}</div></div>`;
         }).join("");
         return `<details class="folder" ${index === 0 ? "open" : ""}><summary><span class="folder-title"><span class="folder-icon"></span>${esc(name)}</span><span class="small">${items.length} 个 · ${healthy} 正常</span></summary>${body}</details>`;
       }).join("");
@@ -445,6 +493,8 @@
       const ports = data.ports || [];
       const scripts = data.scripts || [];
       const actions = data.actions || [];
+      folderState = normalizeFolderState(data.folderConfig || folderState);
+      lastSites = sites;
       const running = containers.filter((item) => /^Up/.test(item.status || "")).length;
       const healthy = sites.filter((item) => item.httpStatus === 200).length;
 
@@ -496,6 +546,14 @@
       document.querySelectorAll("[data-delete-port]").forEach((button) => {
         button.onclick = () => deleteSite(button.dataset.deletePort, button.dataset.deleteName);
       });
+      document.querySelectorAll("[data-move-port]").forEach((select) => {
+        select.onchange = () => {
+          folderState.assignments[String(select.dataset.movePort)] = select.value;
+          renderSiteFolders(lastSites);
+          bindFolderControls();
+          $("liveText").textContent = "文件夹变更未保存";
+        };
+      });
 
       $("liveDot").className = "dot ok";
       $("liveText").textContent = `已更新 ${data.generatedAtLocal || ""}`;
@@ -534,7 +592,48 @@
       }
     }
 
+    function bindFolderControls() {
+      $("addFolderBtn").onclick = () => {
+        const name = prompt("请输入新文件夹名称：");
+        const trimmed = String(name || "").trim();
+        if (!trimmed) return;
+        if (trimmed.length > 30) {
+          alert("文件夹名称不要超过 30 个字符");
+          return;
+        }
+        if (!folderState.folders.includes(trimmed)) folderState.folders.push(trimmed);
+        renderSiteFolders(lastSites);
+        bindFolderControls();
+        $("liveText").textContent = "新文件夹未保存";
+      };
+      $("saveFoldersBtn").onclick = saveFolders;
+    }
+
+    async function saveFolders() {
+      const password = prompt("请输入监控管理密码：");
+      if (!password) return;
+      try {
+        const configBytes = new TextEncoder().encode(JSON.stringify({ folders: folderState.folders, assignments: folderState.assignments }));
+        let configBinary = "";
+        configBytes.forEach((byte) => { configBinary += String.fromCharCode(byte); });
+        const response = await fetch("cgi-bin/action.sh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "save_folders", encodedConfig: btoa(configBinary), password })
+        });
+        const result = await response.json();
+        if (!result.ok) throw new Error(result.error || "提交失败");
+        $("liveDot").className = "dot ok";
+        $("liveText").textContent = "文件夹保存请求已提交...";
+        setTimeout(load, 3000);
+      } catch (error) {
+        $("liveDot").className = "dot bad";
+        $("liveText").textContent = `文件夹保存失败：${error.message}`;
+      }
+    }
+
     load();
+    bindFolderControls();
     setInterval(load, 15000);
   </script>
 </body>
