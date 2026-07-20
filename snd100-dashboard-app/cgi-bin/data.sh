@@ -9,15 +9,22 @@ if [ "$REQUEST_METHOD" = "POST" ]; then
   else
     /busybox cat > "$DATA_FILE"
   fi
-  /busybox printf "Status: 204 No Content\r\n\r\n"
+  /busybox printf "Content-Type: application/json; charset=utf-8\r\n"
+  /busybox printf "Cache-Control: no-store\r\n"
+  /busybox printf "Content-Length: 11\r\n\r\n"
+  /busybox printf '{"ok":true}'
   exit 0
 fi
 
-/busybox printf "Content-Type: application/json; charset=utf-8\r\n"
-/busybox printf "Cache-Control: no-store\r\n\r\n"
-
 if [ -f "$DATA_FILE" ]; then
+  size="$(/busybox wc -c < "$DATA_FILE")"
+  /busybox printf "Content-Type: application/json; charset=utf-8\r\n"
+  /busybox printf "Cache-Control: no-store\r\n"
+  /busybox printf "Content-Length: %s\r\n\r\n" "$size"
   /busybox cat "$DATA_FILE"
 else
-  echo '{"data":null}'
+  /busybox printf "Content-Type: application/json; charset=utf-8\r\n"
+  /busybox printf "Cache-Control: no-store\r\n"
+  /busybox printf "Content-Length: 13\r\n\r\n"
+  /busybox printf '{"data":null}'
 fi
