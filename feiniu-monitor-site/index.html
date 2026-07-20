@@ -220,6 +220,74 @@
       flex-wrap: wrap;
       gap: 7px;
     }
+    .folder-list {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+    details.folder {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      overflow: hidden;
+    }
+    details.folder[open] {
+      background: var(--surface);
+    }
+    .folder summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 13px;
+      user-select: none;
+    }
+    .folder summary::-webkit-details-marker { display: none; }
+    .folder-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 720;
+    }
+    .folder-icon {
+      width: 26px;
+      height: 22px;
+      border: 1px solid #bad1df;
+      border-radius: 4px;
+      background: #e7f3f8;
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .folder-icon::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: -5px;
+      width: 11px;
+      height: 7px;
+      border: 1px solid #bad1df;
+      border-bottom: 0;
+      border-radius: 4px 4px 0 0;
+      background: #e7f3f8;
+    }
+    .site-item {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 13px;
+      border-top: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .site-main {
+      min-width: 0;
+    }
+    .site-main strong {
+      display: block;
+      margin-bottom: 4px;
+    }
     .empty {
       padding: 28px 16px;
       text-align: center;
@@ -231,12 +299,14 @@
       .grid { grid-template-columns: 1fr; }
       .topbar { align-items: flex-start; flex-direction: column; }
       .status-pill { width: 100%; justify-content: flex-start; }
+      .site-item { grid-template-columns: 1fr auto; }
     }
     @media (max-width: 560px) {
       header, main { padding-left: 14px; padding-right: 14px; }
       .summary { grid-template-columns: 1fr; }
       th:nth-child(3), td:nth-child(3) { display: none; }
       .row { grid-template-columns: 1fr; gap: 4px; }
+      .site-item { grid-template-columns: 1fr; align-items: start; }
     }
   </style>
 </head>
@@ -273,11 +343,8 @@
         </section>
 
         <section class="panel">
-          <div class="panel-head"><h2>网站健康检查</h2><span class="small">本机访问 127.0.0.1</span></div>
-          <table>
-            <thead><tr><th>站点</th><th>端口</th><th>状态</th><th>入口</th><th>操作</th></tr></thead>
-            <tbody id="siteRows"></tbody>
-          </table>
+          <div class="panel-head"><h2>网站文件夹</h2><span class="small">本机访问 127.0.0.1</span></div>
+          <div class="folder-list" id="siteFolders"></div>
         </section>
       </div>
 
@@ -333,6 +400,45 @@
       $(id).innerHTML = rows.length ? rows.join("") : `<tr><td colspan="5"><div class="empty">暂无数据</div></td></tr>`;
     }
 
+    function siteGroup(item) {
+      const port = Number(item.port);
+      if (port === 18084 || /监控|Monitor/i.test(item.name || "")) return "管理工具";
+      if (port === 18080 || port === 18081 || port === 18082 || port === 18083) return "业务网站";
+      if (port === 80 || port === 443) return "系统入口";
+      return "其他网站";
+    }
+
+    function folderOrder(name) {
+      return ({ "业务网站": 1, "管理工具": 2, "系统入口": 3, "其他网站": 4 })[name] || 9;
+    }
+
+    function renderSiteFolders(sites) {
+      if (!sites.length) {
+        $("siteFolders").innerHTML = '<div class="empty">暂无网站</div>';
+        return;
+      }
+      const groups = new Map();
+      sites.forEach((site) => {
+        const name = siteGroup(site);
+        if (!groups.has(name)) groups.set(name, []);
+        groups.get(name).push(site);
+      });
+      const folders = [...groups.entries()].sort((a, b) => folderOrder(a[0]) - folderOrder(b[0]));
+      $("siteFolders").innerHTML = folders.map(([name, items], index) => {
+        const healthy = items.filter((item) => item.httpStatus === 200).length;
+        const body = items.sort((a, b) => Number(a.port) - Number(b.port)).map((item) => {
+          const kind = item.httpStatus === 200 ? "good" : "bad";
+          const url = `http://${publicHost}:${item.port}/`;
+          const canDelete = Number(item.port) !== 18084;
+          const button = canDelete
+            ? `<button class="action-btn danger" type="button" data-delete-port="${esc(item.port)}" data-delete-name="${esc(item.name)}">删除</button>`
+            : `<button class="action-btn" type="button" disabled>保留</button>`;
+          return `<div class="site-item"><div class="site-main"><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></div><div>${tag(item.port, "warn")}</div><div>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</div><div><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a> ${button}</div></div>`;
+        }).join("");
+        return `<details class="folder" ${index === 0 ? "open" : ""}><summary><span class="folder-title"><span class="folder-icon"></span>${esc(name)}</span><span class="small">${items.length} 个 · ${healthy} 正常</span></summary>${body}</details>`;
+      }).join("");
+    }
+
     function render(data) {
       const containers = data.containers || [];
       const sites = data.sites || [];
@@ -357,15 +463,7 @@
         return `<tr><td><strong>${esc(item.name)}</strong></td><td>${tag(item.status, statusKind(item.status))}</td><td class="mono">${esc(item.image)}</td><td>${portsHtml || '<span class="small">无</span>'}</td></tr>`;
       }));
 
-      setRows("siteRows", sites.map((item) => {
-        const kind = item.httpStatus === 200 ? "good" : "bad";
-        const url = `http://${publicHost}:${item.port}/`;
-        const canDelete = Number(item.port) !== 18084;
-        const button = canDelete
-          ? `<button class="action-btn danger" type="button" data-delete-port="${esc(item.port)}" data-delete-name="${esc(item.name)}">删除</button>`
-          : `<button class="action-btn" type="button" disabled>保留</button>`;
-        return `<tr><td><strong>${esc(item.name)}</strong><div class="small mono">${esc(item.path)}</div></td><td>${tag(item.port, "warn")}</td><td>${tag(item.httpStatus ? `HTTP ${item.httpStatus}` : item.error || "未检查", kind)}</td><td><a class="link" href="${esc(url)}" target="_blank" rel="noreferrer">打开</a></td><td>${button}</td></tr>`;
-      }));
+      renderSiteFolders(sites);
 
       $("portTags").innerHTML = ports.length ? ports.map((p) => tag(`${p.port} ${p.process || ""}`, p.public ? "warn" : "")).join("") : '<div class="empty">暂无监听端口</div>';
 
