@@ -413,6 +413,9 @@
         <button class="btn" id="exportBtn" type="button">导出 JSON</button>
         <label class="btn" for="importInput">导入 JSON</label>
         <input id="importInput" type="file" accept="application/json,.json" hidden />
+        <button class="btn" id="tokenBtn" type="button">设置 GitHub Token</button>
+        <button class="btn" id="pullGithubBtn" type="button">从 GitHub 同步</button>
+        <button class="btn" id="pushGithubBtn" type="button">保存到 GitHub</button>
         <button class="btn danger" id="resetBtn" type="button">恢复默认</button>
         <button class="btn primary" id="addTaskBtn" type="button">新增任务</button>
         <div class="save-state" id="saveState">正在读取本地数据...</div>
@@ -472,6 +475,11 @@
 
   <script>
     const STORAGE_KEY = "snd100_design_dashboard_v3";
+    const GITHUB_TOKEN_KEY = "snd100_design_dashboard_github_token";
+    const GITHUB_OWNER = "zq9278";
+    const GITHUB_REPO = "html_repository";
+    const GITHUB_BRANCH = "main";
+    const GITHUB_DATA_PATH = "snd100-design-dashboard/data/dashboard.json";
 
     const defaultData = [
       {
@@ -674,6 +682,143 @@
       saveTimer = window.setTimeout(() => {
         elements.saveState.textContent = `上次保存：${new Date().toLocaleString()}`;
       }, 1600);
+    }
+
+    function getGithubToken() {
+      return localStorage.getItem(GITHUB_TOKEN_KEY) || "";
+    }
+
+    function setGithubToken() {
+      const current = getGithubToken();
+      const token = prompt(
+        "请输入 GitHub Fine-grained token。权限只需要给 zq9278/html_repository 的 Contents: Read and write。Token 只保存在当前浏览器，不会写入仓库。",
+        current
+      );
+      if (token === null) return;
+      const trimmed = token.trim();
+      if (!trimmed) {
+        localStorage.removeItem(GITHUB_TOKEN_KEY);
+        elements.saveState.textContent = "已清除 GitHub Token";
+        return;
+      }
+      localStorage.setItem(GITHUB_TOKEN_KEY, trimmed);
+      elements.saveState.textContent = "GitHub Token 已保存在当前浏览器";
+    }
+
+    function githubApiUrl(path = GITHUB_DATA_PATH) {
+      return `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${encodeURIComponent(path).replace(/%2F/g, "/")}`;
+    }
+
+    function encodeBase64Utf8(value) {
+      const bytes = new TextEncoder().encode(value);
+      let binary = "";
+      bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+      return btoa(binary);
+    }
+
+    function decodeBase64Utf8(value) {
+      const binary = atob(value.replace(/\s/g, ""));
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    }
+
+    async function fetchGithubData({ quiet = false } = {}) {
+      const token = getGithubToken();
+      if (!token) {
+        if (!quiet) alert("请先设置 GitHub Token。");
+        elements.saveState.textContent = "未设置 GitHub Token，仅使用浏览器本地保存";
+        return false;
+      }
+
+      elements.saveState.textContent = "正在从 GitHub 同步...";
+      const response = await fetch(`${githubApiUrl()}?ref=${GITHUB_BRANCH}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json"
+        }
+      });
+
+      if (response.status === 404) {
+        elements.saveState.textContent = "GitHub 暂无数据文件，继续使用本地数据";
+        return false;
+      }
+      if (!response.ok) {
+        throw new Error(`GitHub 读取失败：HTTP ${response.status}`);
+      }
+
+      const file = await response.json();
+      const payload = JSON.parse(decodeBase64Utf8(file.content));
+      const nextData = Array.isArray(payload) ? payload : payload.data;
+      if (!Array.isArray(nextData)) throw new Error("GitHub 数据格式不正确");
+
+      data = nextData;
+      persistData("已从 GitHub 同步到本地");
+      render();
+      return true;
+    }
+
+    async function saveGithubData() {
+      const token = getGithubToken();
+      if (!token) {
+        alert("请先设置 GitHub Token。");
+        return;
+      }
+
+      elements.saveState.textContent = "正在保存到 GitHub...";
+      let sha = null;
+      const existing = await fetch(`${githubApiUrl()}?ref=${GITHUB_BRANCH}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json"
+        }
+      });
+
+      if (existing.ok) {
+        const file = await existing.json();
+        sha = file.sha;
+      } else if (existing.status !== 404) {
+        throw new Error(`GitHub 状态读取失败：HTTP ${existing.status}`);
+      }
+
+      const payload = {
+        app: "SND100 模拟前端设计管理面板",
+        updatedAt: new Date().toISOString(),
+        data
+      };
+
+      const body = {
+        message: "Update SND100 design dashboard data",
+        branch: GITHUB_BRANCH,
+        content: encodeBase64Utf8(JSON.stringify(payload, null, 2))
+      };
+      if (sha) body.sha = sha;
+
+      const response = await fetch(githubApiUrl(), {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(`GitHub 保存失败：HTTP ${response.status} ${detail.slice(0, 180)}`);
+      }
+
+      persistData("已保存到 GitHub");
+    }
+
+    async function runGithubAction(action) {
+      try {
+        await action();
+      } catch (error) {
+        console.error(error);
+        elements.saveState.textContent = error.message;
+        alert(error.message);
+      }
     }
 
     function statusLabel(status) {
@@ -919,6 +1064,9 @@
     }
 
     document.getElementById("addTaskBtn").addEventListener("click", () => addTask(0));
+    document.getElementById("tokenBtn").addEventListener("click", setGithubToken);
+    document.getElementById("pullGithubBtn").addEventListener("click", () => runGithubAction(() => fetchGithubData()));
+    document.getElementById("pushGithubBtn").addEventListener("click", () => runGithubAction(saveGithubData));
 
     document.getElementById("resetBtn").addEventListener("click", () => {
       if (!confirm("这会清空当前浏览器里的记录并恢复默认内容。建议先导出 JSON 备份。是否继续？")) return;
@@ -981,6 +1129,9 @@
 
     render();
     persistData("已加载本地数据");
+    if (getGithubToken()) {
+      runGithubAction(() => fetchGithubData({ quiet: true }));
+    }
   </script>
 </body>
 </html>
